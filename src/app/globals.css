@@ -58,8 +58,12 @@
     @apply bg-primary/20 text-primary;
   }
 
+  .lims-surface {
+    @apply rounded-xl border border-muted-border bg-white shadow-card-md;
+  }
+
   .lims-card {
-    @apply rounded-lg border border-muted-border bg-surface shadow-card;
+    @apply lims-surface;
   }
 
   .lims-stat {

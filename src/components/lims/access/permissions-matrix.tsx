@@ -28,7 +28,7 @@ export function PermissionGroup({
   const someSelected = moduleKeys.some((k) => selected.includes(k));
 
   return (
-    <div className="overflow-hidden rounded-lg border border-muted-border bg-white">
+    <div className="lims-surface overflow-hidden">
       <div className="flex items-center gap-2 bg-muted-bg/80 px-4 py-3">
         <button
           type="button"

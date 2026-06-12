@@ -26,7 +26,7 @@ export function EquipmentFormModal({ onClose, onSave }: EquipmentFormModalProps)
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-md rounded-xl border border-muted-border bg-white p-6 shadow-xl">
+      <div className="lims-surface w-full max-w-md p-6">
         <h3 className="text-lg font-semibold text-slate-900">New Equipment</h3>
         <p className="mt-1 text-sm text-muted">Register lab instruments and track calibration.</p>
 

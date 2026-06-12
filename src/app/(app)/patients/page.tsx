@@ -14,6 +14,8 @@ import { FlashBanner } from '@/components/lims/flash-banner';
 
 import { PatientRegistrationModal } from '@/components/lims/patients/patient-registration-modal';
 
+import { HydrationSafeInput } from '@/components/lims/client-only';
+
 import { getPatients } from '@/lib/data/patients-store';
 
 import type { Patient } from '@/lib/types/lims';
@@ -129,22 +131,16 @@ function PatientsContent() {
 
 
 
-      <div className="overflow-hidden rounded-xl border border-muted-border bg-white shadow-card-md">
+      <div className="lims-card overflow-hidden">
 
         <div className="border-b border-muted-border bg-muted-bg/40 px-5 py-4">
 
-          <input
-
+          <HydrationSafeInput
             type="search"
-
             className="lims-input max-w-sm bg-white"
-
             placeholder="Search by name, ID, or phone…"
-
             value={search}
-
             onChange={(e) => setSearch(e.target.value)}
-
           />
 
         </div>

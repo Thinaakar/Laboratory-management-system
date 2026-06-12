@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { AnalyticsBarChart } from '@/components/lims/analytics/analytics-bar-chart';
 import { AnalyticsPieChart } from '@/components/lims/analytics/analytics-pie-chart';
+import { useClientData } from '@/hooks/use-hydrated';
 import { getAnalyticsSnapshot } from '@/lib/data/analytics';
 import { cn, formatCurrency } from '@/lib/utils';
 
@@ -25,7 +26,16 @@ interface KpiDef {
 }
 
 export function AnalyticsDashboard() {
-  const data = getAnalyticsSnapshot();
+  const { data, ready } = useClientData(() => getAnalyticsSnapshot());
+
+  if (!ready || !data) {
+    return (
+      <div className="py-16 text-center text-sm text-muted">
+        Loading analytics…
+      </div>
+    );
+  }
+
   const { kpis } = data;
 
   const kpiCards: KpiDef[] = [
@@ -92,7 +102,7 @@ export function AnalyticsDashboard() {
         {kpiCards.map((k) => (
           <div
             key={k.label}
-            className="rounded-xl border border-muted-border bg-white p-4 shadow-sm transition-shadow hover:shadow-md"
+            className="lims-card p-4"
           >
             <div className={cn('inline-flex rounded-lg p-2', k.color)}>
               <k.icon size={18} />

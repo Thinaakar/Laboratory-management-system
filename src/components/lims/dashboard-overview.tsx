@@ -87,10 +87,7 @@ export function DashboardOverview({
         {cards.map((k) => (
           <div
             key={k.label}
-            className={cn(
-              'rounded-xl border border-muted-border bg-white shadow-sm',
-              compact ? 'p-2 md:p-2.5' : 'p-4',
-            )}
+            className={cn('lims-card', compact ? 'p-2 md:p-2.5' : 'p-4')}
           >
             <div className={cn('inline-flex rounded-lg', k.color, compact ? 'p-1' : 'p-2')}>
               <k.icon size={compact ? 12 : 18} />

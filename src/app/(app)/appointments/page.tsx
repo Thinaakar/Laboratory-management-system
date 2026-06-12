@@ -7,6 +7,7 @@ import { PageHeader } from '@/components/lims/page-header';
 import { FlashBanner } from '@/components/lims/flash-banner';
 import { ScheduleBookingModal } from '@/components/lims/appointments/schedule-booking-modal';
 import { StatusBadge, statusVariant } from '@/components/lims/status-badge';
+import { HydrationSafeInput } from '@/components/lims/client-only';
 import { getAppointments } from '@/lib/data/appointments-store';
 import type { Appointment } from '@/lib/types/lims';
 import { formatCurrency, formatDateTime } from '@/lib/utils';
@@ -61,9 +62,9 @@ function AppointmentsContent() {
 
       <FlashBanner />
 
-      <div className="overflow-hidden rounded-xl border border-muted-border bg-white shadow-card-md">
+      <div className="lims-card overflow-hidden">
         <div className="border-b border-muted-border bg-muted-bg/40 px-5 py-4">
-          <input
+          <HydrationSafeInput
             type="search"
             className="lims-input max-w-sm bg-white"
             placeholder="Search by patient, booking ID, order, or test…"
@@ -106,7 +107,7 @@ function AppointmentsContent() {
                     <td className="font-mono text-xs">{b.patientId}</td>
                     <td>{formatDateTime(b.scheduledAt)}</td>
                     <td>{b.type}</td>
-                    <td>{b.referringDoctor ?? 'None / Walk-In'}</td>
+                    <td>{b.referringDoctor ?? 'None'}</td>
                     <td>{b.priority ?? 'Normal'}</td>
                     <td>{b.healthPackageName ?? '—'}</td>
                     <td className="max-w-xs truncate">{b.testNames?.join(', ') ?? '—'}</td>
@@ -130,7 +131,7 @@ function AppointmentsContent() {
           onSaved={({ invoice }) => {
             refresh();
             setShowModal(false);
-            router.push(`/billing/collect?invoiceId=${encodeURIComponent(invoice.id)}`);
+            router.push(`/billing?collect=1&invoiceId=${encodeURIComponent(invoice.id)}`);
           }}
         />
       )}

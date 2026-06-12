@@ -15,6 +15,8 @@ interface SearchableSelectProps {
   onChange: (value: string) => void;
   placeholder?: string;
   id?: string;
+  /** Allow free-text values not in the options list */
+  allowCustomValue?: boolean;
 }
 
 export function SearchableSelect({
@@ -23,6 +25,7 @@ export function SearchableSelect({
   onChange,
   placeholder = 'Search…',
   id,
+  allowCustomValue = false,
 }: SearchableSelectProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
@@ -32,9 +35,9 @@ export function SearchableSelect({
 
   useEffect(() => {
     if (!open) {
-      setQuery(selected?.label ?? '');
+      setQuery(selected?.label ?? (allowCustomValue ? value : '') ?? '');
     }
-  }, [open, selected]);
+  }, [open, selected, value, allowCustomValue]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -72,8 +75,12 @@ export function SearchableSelect({
           value={query}
           placeholder={placeholder}
           onChange={(e) => {
-            setQuery(e.target.value);
+            const next = e.target.value;
+            setQuery(next);
             setOpen(true);
+            if (allowCustomValue) {
+              onChange(next);
+            }
           }}
           onFocus={() => setOpen(true)}
           autoComplete="off"

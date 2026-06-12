@@ -9,9 +9,9 @@ import { formatCurrency } from '@/lib/utils';
 const QUICK_ACTIONS = [
   { label: 'Register Patient', href: '/patients?register=1' },
   { label: 'Schedule Appointment', href: '/appointments?schedule=1' },
-  { label: 'Collect Payment', href: '/billing/collect' },
-  { label: 'Register Sample', href: '/samples/new' },
-  { label: 'Enter Results', href: '/results/entry' },
+  { label: 'Collect Payment', href: '/billing?collect=1' },
+  { label: 'Register Sample', href: '/samples?register=1' },
+  { label: 'Enter Results', href: '/results?entry=1' },
   { label: 'Approve Reports', href: '/reports/approval' },
 ];
 

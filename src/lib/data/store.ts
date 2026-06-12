@@ -280,6 +280,8 @@ export interface SampleTrendDay {
   heightPct: number;
 }
 
+const WEEKDAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const;
+
 /** Last 7 days sample counts with labels for the dashboard bar chart */
 export function getSampleTrend(): SampleTrendDay[] {
   const days: SampleTrendDay[] = [];
@@ -288,7 +290,7 @@ export function getSampleTrend(): SampleTrendDay[] {
     d.setDate(d.getDate() - i);
     const key = d.toISOString().slice(0, 10);
     const count = seedSamples.filter((s) => s.createdAt.startsWith(key)).length;
-    const label = d.toLocaleDateString('en-IN', { weekday: 'short' });
+    const label = WEEKDAY_LABELS[d.getDay()];
     days.push({ label, count, heightPct: 0 });
   }
   const max = Math.max(...days.map((day) => day.count), 1);

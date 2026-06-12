@@ -5,11 +5,14 @@ import { Suspense } from 'react';
 import { PageHeader } from '@/components/lims/page-header';
 import { FlashBanner } from '@/components/lims/flash-banner';
 import { StatusBadge, statusVariant } from '@/components/lims/status-badge';
+import { useClientData } from '@/hooks/use-hydrated';
 import { getOrders } from '@/lib/data/store';
+import type { LabOrder } from '@/lib/types/lims';
 import { formatCurrency, formatDateTime } from '@/lib/utils';
 
 function OrdersContent() {
-  const orders = getOrders();
+  const { data: orders, ready } = useClientData(() => getOrders());
+  const rows: LabOrder[] = orders ?? [];
 
   return (
     <>
@@ -38,21 +41,29 @@ function OrdersContent() {
             </tr>
           </thead>
           <tbody>
-            {orders.map((o) => (
-              <tr key={o.id}>
-                <td className="font-mono text-xs">{o.id}</td>
-                <td>
-                  <span className="font-medium text-slate-900">{o.patientName}</span>
-                  <span className="ml-1 text-xs text-muted">({o.patientId})</span>
+            {!ready ? (
+              <tr>
+                <td colSpan={6} className="py-10 text-center text-sm text-muted">
+                  Loading orders…
                 </td>
-                <td className="max-w-xs truncate">{o.testNames.join(', ')}</td>
-                <td>{formatCurrency(o.totalAmount)}</td>
-                <td>
-                  <StatusBadge label={o.status} variant={statusVariant(o.status)} />
-                </td>
-                <td>{formatDateTime(o.createdAt)}</td>
               </tr>
-            ))}
+            ) : (
+              rows.map((o) => (
+                <tr key={o.id}>
+                  <td className="font-mono text-xs">{o.id}</td>
+                  <td>
+                    <span className="font-medium text-slate-900">{o.patientName}</span>
+                    <span className="ml-1 text-xs text-muted">({o.patientId})</span>
+                  </td>
+                  <td className="max-w-xs truncate">{o.testNames.join(', ')}</td>
+                  <td>{formatCurrency(o.totalAmount)}</td>
+                  <td>
+                    <StatusBadge label={o.status} variant={statusVariant(o.status)} />
+                  </td>
+                  <td>{formatDateTime(o.createdAt)}</td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

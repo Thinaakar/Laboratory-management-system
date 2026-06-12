@@ -1,42 +1,122 @@
 'use client';
 
 import { Plus } from 'lucide-react';
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { PageHeader } from '@/components/lims/page-header';
 import { FlashBanner } from '@/components/lims/flash-banner';
 import { EnterResultsModal } from '@/components/lims/results/enter-results-modal';
 import { StatusBadge, statusVariant } from '@/components/lims/status-badge';
 import { getResults } from '@/lib/data/store';
-import { formatDateTime } from '@/lib/utils';
+import { cn, formatDateTime } from '@/lib/utils';
+
+type ResultsFilter = 'all' | 'pending';
 
 function ResultsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [filter, setFilter] = useState<ResultsFilter>('all');
   const [showModal, setShowModal] = useState(false);
   const [results, setResults] = useState(getResults());
 
+  const refresh = useCallback(() => {
+    setResults(getResults());
+  }, []);
+
   useEffect(() => {
+    refresh();
+  }, [refresh]);
+
+  useEffect(() => {
+    if (searchParams.get('filter') === 'pending') {
+      setFilter('pending');
+    }
+
     if (searchParams.get('entry') === '1') {
+      setFilter('pending');
       setShowModal(true);
-      window.history.replaceState(null, '', '/results');
+    }
+
+    if (searchParams.get('entry') === '1' || searchParams.has('filter')) {
+      const next = new URLSearchParams();
+      if (searchParams.get('filter') === 'pending' || searchParams.get('entry') === '1') {
+        next.set('filter', 'pending');
+      }
+      const success = searchParams.get('success');
+      if (success) {
+        next.set('success', success);
+      }
+      const qs = next.toString();
+      window.history.replaceState(null, '', qs ? `/results?${qs}` : '/results');
     }
   }, [searchParams]);
+
+  const displayed = useMemo(() => {
+    if (filter === 'pending') {
+      return results.filter((r) => r.queueStatus !== 'Completed');
+    }
+    return results;
+  }, [results, filter]);
+
+  const setFilterAndUrl = (next: ResultsFilter) => {
+    setFilter(next);
+    const params = new URLSearchParams(window.location.search);
+    if (next === 'pending') {
+      params.set('filter', 'pending');
+    } else {
+      params.delete('filter');
+    }
+    const qs = params.toString();
+    router.replace(qs ? `/results?${qs}` : '/results', { scroll: false });
+  };
 
   return (
     <>
       <PageHeader
         title="Results"
-        description="Test results and values"
+        description={
+          filter === 'pending'
+            ? 'Active tests awaiting processing'
+            : 'Test results and values'
+        }
         action={
-          <button type="button" onClick={() => setShowModal(true)} className="lims-btn-primary">
-            <Plus className="h-4 w-4" />
-            Enter Results
-          </button>
+          filter === 'pending' ? (
+            <button type="button" onClick={() => setShowModal(true)} className="lims-btn-primary">
+              <Plus className="h-4 w-4" />
+              Enter Results
+            </button>
+          ) : undefined
         }
       />
 
       <FlashBanner />
+
+      <div className="mb-4 flex gap-2">
+        <button
+          type="button"
+          onClick={() => setFilterAndUrl('pending')}
+          className={cn(
+            'rounded-lg border px-4 py-2 text-sm font-medium transition-colors',
+            filter === 'pending'
+              ? 'border-primary bg-primary text-white'
+              : 'border-muted-border bg-white text-slate-700 hover:bg-muted-bg',
+          )}
+        >
+          Pending work
+        </button>
+        <button
+          type="button"
+          onClick={() => setFilterAndUrl('all')}
+          className={cn(
+            'rounded-lg border px-4 py-2 text-sm font-medium transition-colors',
+            filter === 'all'
+              ? 'border-primary bg-primary text-white'
+              : 'border-muted-border bg-white text-slate-700 hover:bg-muted-bg',
+          )}
+        >
+          All results
+        </button>
+      </div>
 
       <div className="lims-card overflow-hidden">
         <div className="overflow-x-auto">
@@ -45,6 +125,7 @@ function ResultsContent() {
               <tr>
                 <th>Result ID</th>
                 <th>Test</th>
+                <th>Sample</th>
                 <th>Order</th>
                 <th>Value</th>
                 <th>Reference</th>
@@ -55,32 +136,43 @@ function ResultsContent() {
               </tr>
             </thead>
             <tbody>
-              {results.map((r) => (
-                <tr key={r.id}>
-                  <td className="font-mono text-xs">{r.id}</td>
-                  <td className="font-medium text-slate-900">{r.testName}</td>
-                  <td className="font-mono text-xs">{r.orderId}</td>
-                  <td>
-                    {r.value}
-                    {r.unit && <span className="ml-1 text-xs text-muted">{r.unit}</span>}
+              {displayed.length === 0 ? (
+                <tr>
+                  <td colSpan={10} className="py-8 text-center text-muted">
+                    {filter === 'pending'
+                      ? 'No items in queue — all tests completed.'
+                      : 'No results found.'}
                   </td>
-                  <td className="text-muted">{r.referenceRange ?? '—'}</td>
-                  <td>
-                    {r.isCritical ? (
-                      <StatusBadge label="Critical" variant="error" />
-                    ) : (
-                      <span className="text-xs text-muted">—</span>
-                    )}
-                  </td>
-                  <td>
-                    <StatusBadge label={r.queueStatus} variant={statusVariant(r.queueStatus)} />
-                  </td>
-                  <td>
-                    <StatusBadge label={r.approvalStatus} variant={statusVariant(r.approvalStatus)} />
-                  </td>
-                  <td>{r.enteredAt ? formatDateTime(r.enteredAt) : '—'}</td>
                 </tr>
-              ))}
+              ) : (
+                displayed.map((r) => (
+                  <tr key={r.id}>
+                    <td className="font-mono text-xs">{r.id}</td>
+                    <td className="font-medium text-slate-900">{r.testName}</td>
+                    <td className="font-mono text-xs">{r.sampleId}</td>
+                    <td className="font-mono text-xs">{r.orderId}</td>
+                    <td>
+                      {r.value}
+                      {r.unit && <span className="ml-1 text-xs text-muted">{r.unit}</span>}
+                    </td>
+                    <td className="text-muted">{r.referenceRange ?? '—'}</td>
+                    <td>
+                      {r.isCritical ? (
+                        <StatusBadge label="Critical" variant="error" />
+                      ) : (
+                        <span className="text-xs text-muted">—</span>
+                      )}
+                    </td>
+                    <td>
+                      <StatusBadge label={r.queueStatus} variant={statusVariant(r.queueStatus)} />
+                    </td>
+                    <td>
+                      <StatusBadge label={r.approvalStatus} variant={statusVariant(r.approvalStatus)} />
+                    </td>
+                    <td>{r.enteredAt ? formatDateTime(r.enteredAt) : '—'}</td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -91,7 +183,7 @@ function ResultsContent() {
           onClose={() => setShowModal(false)}
           onSaved={() => {
             setShowModal(false);
-            setResults(getResults());
+            refresh();
             router.push('/reports/approval?success=results');
           }}
         />

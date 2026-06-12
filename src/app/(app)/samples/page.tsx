@@ -79,7 +79,7 @@ function SamplesContent() {
           onSaved={() => {
             setShowModal(false);
             setSamples(getSamples());
-            router.push('/lab-queue?success=sample');
+            router.push('/results?filter=pending&success=sample');
           }}
         />
       )}

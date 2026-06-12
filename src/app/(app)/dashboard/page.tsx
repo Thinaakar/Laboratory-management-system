@@ -11,7 +11,7 @@ const QUICK_ACTIONS = [
   { label: 'Schedule Appointment', href: '/appointments?schedule=1' },
   { label: 'Collect Payment', href: '/billing?collect=1' },
   { label: 'Register Sample', href: '/samples?register=1' },
-  { label: 'Enter Results', href: '/results?entry=1' },
+  { label: 'Enter Results', href: '/results?filter=pending&entry=1' },
   { label: 'Approve Reports', href: '/reports/approval' },
 ];
 

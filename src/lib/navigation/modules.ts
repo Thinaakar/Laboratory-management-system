@@ -6,7 +6,7 @@ export interface NavItem {
   permission?: string;
   /** Show item if user has any of these permissions */
   permissions?: string[];
-  /** Pipeline step number (1–8) for daily workflow items */
+  /** Pipeline step number (1–7) for daily workflow items */
   step?: number;
   /** Extra paths that should highlight this nav item */
   activePaths?: string[];
@@ -25,10 +25,15 @@ export const WORKFLOW_STEPS: NavItem[] = [
   { step: 2, label: 'Appointments', href: '/appointments', permission: 'appointments.read', activePaths: ['/appointments/new'] },
   { step: 3, label: 'Billing', href: '/billing', permission: 'billing.read' },
   { step: 4, label: 'Samples', href: '/samples', permission: 'samples.read' },
-  { step: 5, label: 'Lab Queue', href: '/lab-queue', permission: 'results.read' },
-  { step: 6, label: 'Results', href: '/results', permission: 'results.read' },
-  { step: 7, label: 'Report Approval', href: '/reports/approval', permission: 'reports.approve' },
-  { step: 8, label: 'Reports', href: '/reports', permission: 'reports.read' },
+  {
+    step: 5,
+    label: 'Results',
+    href: '/results',
+    permission: 'results.read',
+    activePaths: ['/results', '/results/entry', '/lab-queue'],
+  },
+  { step: 6, label: 'Report Approval', href: '/reports/approval', permission: 'reports.approve' },
+  { step: 7, label: 'Reports', href: '/reports', permission: 'reports.read' },
 ];
 
 export const LIMS_NAV: NavGroup[] = [
@@ -102,7 +107,6 @@ export const WORKFLOW_STRIP_LABELS: Record<string, string> = {
   '/appointments': 'Schedule',
   '/billing': 'Invoice',
   '/samples': 'Sample',
-  '/lab-queue': 'Queue',
   '/results': 'Results',
   '/reports/approval': 'Approve',
   '/reports': 'Report',

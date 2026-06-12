@@ -7,7 +7,7 @@ function EnterResultsRedirect() {
   const router = useRouter();
 
   useEffect(() => {
-    router.replace('/results?entry=1');
+    router.replace('/results?filter=pending&entry=1');
   }, [router]);
 
   return null;

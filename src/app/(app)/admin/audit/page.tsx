@@ -1,0 +1,41 @@
+'use client';
+
+import { PageHeader } from '@/components/lims/page-header';
+import { getAuditLogs } from '@/lib/data/store';
+import { formatDateTime } from '@/lib/utils';
+
+export default function AuditPage() {
+  const logs = getAuditLogs();
+
+  return (
+    <div>
+      <PageHeader title="Audit Logs" description="Critical operation history for compliance" />
+      <div className="lims-card overflow-x-auto">
+        <table className="lims-table">
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>User</th>
+              <th>Action</th>
+              <th>Module</th>
+              <th>Details</th>
+              <th>IP</th>
+            </tr>
+          </thead>
+          <tbody>
+            {logs.map((log) => (
+              <tr key={log.id}>
+                <td>{formatDateTime(log.timestamp)}</td>
+                <td className="font-medium text-slate-900">{log.userName}</td>
+                <td>{log.action}</td>
+                <td>{log.module}</td>
+                <td className="max-w-xs truncate">{log.details ?? '—'}</td>
+                <td className="font-mono text-xs">{log.ipAddress ?? '—'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}

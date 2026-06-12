@@ -313,8 +313,10 @@ export const seedBranches: Branch[] = [
 ];
 
 export const seedPackages: HealthPackage[] = [
-  { id: 'PKG-BASIC', name: 'Basic Health Checkup', testIds: ['TST-CBC', 'TST-FBS'], price: 520, description: 'CBC + Fasting Blood Sugar' },
-  { id: 'PKG-EXEC', name: 'Executive Profile', testIds: ['TST-CBC', 'TST-LFT', 'TST-TSH'], price: 1450, description: 'Comprehensive metabolic panel' },
+  { id: 'PKG-BASIC', name: 'Basic Health Package', testIds: ['TST-CBC', 'TST-FBS'], price: 520, description: 'CBC + Fasting Blood Sugar' },
+  { id: 'PKG-EXEC', name: 'Executive Health Package', testIds: ['TST-CBC', 'TST-LFT', 'TST-TSH'], price: 1450, description: 'Comprehensive metabolic panel' },
+  { id: 'PKG-SENIOR', name: 'Senior Citizen Package', testIds: ['TST-CBC', 'TST-TSH', 'TST-FBS'], price: 890, description: 'CBC, thyroid, and fasting sugar' },
+  { id: 'PKG-DIABETES', name: 'Diabetes Package', testIds: ['TST-FBS', 'TST-CBC'], price: 520, description: 'Fasting blood sugar and CBC' },
 ];
 
 export const seedReferrals: DoctorReferral[] = [
@@ -344,7 +346,7 @@ export {
 export {
   getAppointments,
   seedAppointments,
-  addAppointment,
+  addBooking,
 } from './appointments-store';
 export {
   getPatients,

@@ -1,43 +1,139 @@
 'use client';
 
-import Link from 'next/link';
-import { Suspense } from 'react';
+import { Plus } from 'lucide-react';
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { PageHeader } from '@/components/lims/page-header';
 import { FlashBanner } from '@/components/lims/flash-banner';
+import { ScheduleBookingModal } from '@/components/lims/appointments/schedule-booking-modal';
 import { StatusBadge, statusVariant } from '@/components/lims/status-badge';
-import { getAppointments } from '@/lib/data/store';
-import { formatDateTime } from '@/lib/utils';
+import { getAppointments } from '@/lib/data/appointments-store';
+import type { Appointment } from '@/lib/types/lims';
+import { formatCurrency, formatDateTime } from '@/lib/utils';
 
 function AppointmentsContent() {
-  const appointments = getAppointments();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [bookings, setBookings] = useState<Appointment[]>([]);
+  const [search, setSearch] = useState('');
+  const [showModal, setShowModal] = useState(false);
+
+  const refresh = useCallback(() => {
+    setBookings(getAppointments());
+  }, []);
+
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
+
+  useEffect(() => {
+    if (searchParams.get('schedule') === '1') {
+      setShowModal(true);
+      window.history.replaceState(null, '', '/appointments');
+    }
+  }, [searchParams]);
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return bookings;
+    return bookings.filter(
+      (b) =>
+        b.patientName.toLowerCase().includes(q) ||
+        b.patientId.toLowerCase().includes(q) ||
+        b.id.toLowerCase().includes(q) ||
+        b.orderId?.toLowerCase().includes(q) ||
+        b.testNames?.some((t) => t.toLowerCase().includes(q)),
+    );
+  }, [bookings, search]);
 
   return (
     <>
+      <PageHeader
+        title="Appointments"
+        description="Patient visit scheduling and lab order bookings"
+        action={
+          <button type="button" onClick={() => setShowModal(true)} className="lims-btn-primary">
+            <Plus className="h-4 w-4" />
+            Schedule Appointment
+          </button>
+        }
+      />
+
       <FlashBanner />
-      <div className="lims-card overflow-x-auto">
-        <table className="lims-table">
-          <thead>
-            <tr>
-              <th>Appointment ID</th>
-              <th>Patient</th>
-              <th>Scheduled</th>
-              <th>Type</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {appointments.map((a) => (
-              <tr key={a.id}>
-                <td className="font-mono text-xs">{a.id}</td>
-                <td className="font-medium text-slate-900">{a.patientName}</td>
-                <td>{formatDateTime(a.scheduledAt)}</td>
-                <td>{a.type}</td>
-                <td><StatusBadge label={a.status} variant={statusVariant(a.status)} /></td>
+
+      <div className="overflow-hidden rounded-xl border border-muted-border bg-white shadow-card-md">
+        <div className="border-b border-muted-border bg-muted-bg/40 px-5 py-4">
+          <input
+            type="search"
+            className="lims-input max-w-sm bg-white"
+            placeholder="Search by patient, booking ID, order, or test…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="lims-table">
+            <thead>
+              <tr>
+                <th>Booking ID</th>
+                <th>Patient</th>
+                <th>Patient ID</th>
+                <th>Scheduled</th>
+                <th>Type</th>
+                <th>Referring Doctor</th>
+                <th>Priority</th>
+                <th>Package</th>
+                <th>Tests</th>
+                <th>Amount</th>
+                <th>Order ID</th>
+                <th>Notes</th>
+                <th>Status</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={13} className="py-10 text-center text-sm text-muted">
+                    No bookings found. Schedule an appointment to get started.
+                  </td>
+                </tr>
+              ) : (
+                filtered.map((b) => (
+                  <tr key={b.id}>
+                    <td className="font-mono text-xs">{b.id}</td>
+                    <td className="font-medium text-slate-900">{b.patientName}</td>
+                    <td className="font-mono text-xs">{b.patientId}</td>
+                    <td>{formatDateTime(b.scheduledAt)}</td>
+                    <td>{b.type}</td>
+                    <td>{b.referringDoctor ?? 'None / Walk-In'}</td>
+                    <td>{b.priority ?? 'Normal'}</td>
+                    <td>{b.healthPackageName ?? '—'}</td>
+                    <td className="max-w-xs truncate">{b.testNames?.join(', ') ?? '—'}</td>
+                    <td>{b.orderTotal != null ? formatCurrency(b.orderTotal) : '—'}</td>
+                    <td className="font-mono text-xs">{b.orderId ?? '—'}</td>
+                    <td className="max-w-[10rem] truncate">{b.notes ?? '—'}</td>
+                    <td>
+                      <StatusBadge label={b.status} variant={statusVariant(b.status)} />
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
+
+      {showModal && (
+        <ScheduleBookingModal
+          onClose={() => setShowModal(false)}
+          onSaved={({ invoice }) => {
+            refresh();
+            setShowModal(false);
+            router.push(`/billing/collect?invoiceId=${encodeURIComponent(invoice.id)}`);
+          }}
+        />
+      )}
     </>
   );
 }
@@ -45,15 +141,6 @@ function AppointmentsContent() {
 export default function AppointmentsPage() {
   return (
     <div>
-      <PageHeader
-        title="Appointments"
-        description="Patient visit scheduling"
-        action={
-          <Link href="/patients/intake" className="lims-btn-primary">
-            Schedule Appointment
-          </Link>
-        }
-      />
       <Suspense fallback={null}>
         <AppointmentsContent />
       </Suspense>

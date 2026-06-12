@@ -7,7 +7,8 @@ import { getDashboardKpis, getPendingTestRows, getSampleTrend } from '@/lib/data
 import { formatCurrency } from '@/lib/utils';
 
 const QUICK_ACTIONS = [
-  { label: 'Patient Intake', href: '/patients/intake' },
+  { label: 'Register Patient', href: '/patients?register=1' },
+  { label: 'Schedule Appointment', href: '/appointments?schedule=1' },
   { label: 'Collect Payment', href: '/billing/collect' },
   { label: 'Register Sample', href: '/samples/new' },
   { label: 'Enter Results', href: '/results/entry' },

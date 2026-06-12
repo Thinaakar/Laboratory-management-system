@@ -5,8 +5,10 @@ import { useRouter } from 'next/navigation';
 
 export default function NewAppointmentPage() {
   const router = useRouter();
+
   useEffect(() => {
-    router.replace('/patients/intake');
+    router.replace('/appointments?schedule=1');
   }, [router]);
+
   return null;
 }

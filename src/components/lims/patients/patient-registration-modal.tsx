@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
+import { ModalPortal } from '@/components/lims/modal-portal';
 import type { Patient, PatientType } from '@/lib/types/lims';
 import {
   addPatient,
@@ -98,7 +99,8 @@ export function PatientRegistrationModal({ onClose, onSaved }: PatientRegistrati
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/40 p-4 sm:p-6">
+    <ModalPortal>
+    <div className="fixed inset-0 z-[100] overflow-y-auto bg-black/40 p-4 sm:p-6">
       <div className="flex min-h-full items-end justify-center sm:items-center">
         <div className="flex w-full max-w-2xl max-h-[calc(100vh-2rem)] flex-col overflow-hidden rounded-xl border border-muted-border bg-white shadow-xl sm:max-h-[min(92vh,calc(100vh-3rem))]">
           <div className="flex shrink-0 items-start justify-between border-b border-muted-border px-6 py-4">
@@ -286,5 +288,6 @@ export function PatientRegistrationModal({ onClose, onSaved }: PatientRegistrati
         </div>
       </div>
     </div>
+    </ModalPortal>
   );
 }

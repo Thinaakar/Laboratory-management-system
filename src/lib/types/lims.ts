@@ -3,6 +3,7 @@
 export type UserRole = 'Admin' | 'Receptionist' | 'Lab Technician' | 'Pathologist';
 
 export type OrderStatus = 'Pending' | 'Collected' | 'Processing' | 'Completed' | 'Cancelled';
+export type OrderPriority = 'Normal' | 'Urgent' | 'STAT';
 export type SampleStatus =
   | 'Registered'
   | 'Collected'
@@ -81,6 +82,10 @@ export interface LabOrder {
   totalAmount: number;
   discount?: number;
   gstPercent?: number;
+  referringDoctor?: string;
+  priority?: OrderPriority;
+  healthPackageId?: string;
+  healthPackageName?: string;
   createdAt: string;
   createdBy?: string;
 }
@@ -179,6 +184,14 @@ export interface Appointment {
   type: 'Scheduled' | 'Walk-In';
   status: 'Scheduled' | 'Completed' | 'Cancelled' | 'No-Show';
   notes?: string;
+  referringDoctor?: string;
+  priority?: OrderPriority;
+  healthPackageId?: string;
+  healthPackageName?: string;
+  orderId?: string;
+  testIds?: string[];
+  testNames?: string[];
+  orderTotal?: number;
 }
 
 export interface InventoryItem {

@@ -1,4 +1,4 @@
-import type { Invoice, LabOrder } from '@/lib/types/lims';
+import type { Invoice, LabOrder, OrderPriority } from '@/lib/types/lims';
 
 const ORDERS_KEY = 'labcore-orders-v1';
 const INVOICES_KEY = 'labcore-invoices-v1';
@@ -150,6 +150,10 @@ export function addOrder(input: {
   testIds: string[];
   testNames: string[];
   totalAmount: number;
+  referringDoctor?: string;
+  priority?: OrderPriority;
+  healthPackageId?: string;
+  healthPackageName?: string;
 }): LabOrder {
   const orders = getOrders();
   const created: LabOrder = {
@@ -161,6 +165,10 @@ export function addOrder(input: {
     status: 'Pending',
     totalAmount: input.totalAmount,
     gstPercent: 0,
+    referringDoctor: input.referringDoctor,
+    priority: input.priority ?? 'Normal',
+    healthPackageId: input.healthPackageId,
+    healthPackageName: input.healthPackageName,
     createdAt: new Date().toISOString(),
   };
   memoryOrders = [...orders, created];

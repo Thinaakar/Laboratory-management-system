@@ -6,7 +6,7 @@ export interface NavItem {
   permission?: string;
   /** Show item if user has any of these permissions */
   permissions?: string[];
-  /** Pipeline step number (1–9) for daily workflow items */
+  /** Pipeline step number (1–8) for daily workflow items */
   step?: number;
   /** Extra paths that should highlight this nav item */
   activePaths?: string[];
@@ -21,15 +21,14 @@ export interface NavGroup {
 
 /** Shared pipeline — used by sidebar + workflow strip */
 export const WORKFLOW_STEPS: NavItem[] = [
-  { step: 1, label: 'Patients', href: '/patients', permission: 'patients.read', activePaths: ['/patients/intake'] },
-  { step: 2, label: 'Appointments', href: '/appointments', permission: 'appointments.read', activePaths: ['/patients/intake'] },
-  { step: 3, label: 'Orders', href: '/orders', permission: 'orders.read', activePaths: ['/patients/intake'] },
-  { step: 4, label: 'Billing', href: '/billing', permission: 'billing.read' },
-  { step: 5, label: 'Samples', href: '/samples', permission: 'samples.read' },
-  { step: 6, label: 'Lab Queue', href: '/lab-queue', permission: 'results.read' },
-  { step: 7, label: 'Results', href: '/results', permission: 'results.read' },
-  { step: 8, label: 'Report Approval', href: '/reports/approval', permission: 'reports.approve' },
-  { step: 9, label: 'Reports', href: '/reports', permission: 'reports.read' },
+  { step: 1, label: 'Patients', href: '/patients', permission: 'patients.read' },
+  { step: 2, label: 'Appointments', href: '/appointments', permission: 'appointments.read', activePaths: ['/appointments/new'] },
+  { step: 3, label: 'Billing', href: '/billing', permission: 'billing.read' },
+  { step: 4, label: 'Samples', href: '/samples', permission: 'samples.read' },
+  { step: 5, label: 'Lab Queue', href: '/lab-queue', permission: 'results.read' },
+  { step: 6, label: 'Results', href: '/results', permission: 'results.read' },
+  { step: 7, label: 'Report Approval', href: '/reports/approval', permission: 'reports.approve' },
+  { step: 8, label: 'Reports', href: '/reports', permission: 'reports.read' },
 ];
 
 export const LIMS_NAV: NavGroup[] = [
@@ -101,7 +100,6 @@ export const MARKETING_NAV = [
 export const WORKFLOW_STRIP_LABELS: Record<string, string> = {
   '/patients': 'Register',
   '/appointments': 'Schedule',
-  '/orders': 'Order',
   '/billing': 'Invoice',
   '/samples': 'Sample',
   '/lab-queue': 'Queue',

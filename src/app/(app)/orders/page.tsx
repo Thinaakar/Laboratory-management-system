@@ -67,8 +67,8 @@ export default function OrdersPage() {
         title="Orders"
         description="Test orders linked to patients through the lab workflow"
         action={
-          <Link href="/patients/intake" className="lims-btn-primary">
-            Create Order
+          <Link href="/appointments?schedule=1" className="lims-btn-primary">
+            Schedule Appointment
           </Link>
         }
       />

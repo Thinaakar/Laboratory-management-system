@@ -1,12 +1,41 @@
-import type { Appointment } from '@/lib/types/lims';
+import type { Appointment, OrderPriority } from '@/lib/types/lims';
 
 const STORAGE_KEY = 'labcore-appointments-v1';
 
 const today = new Date().toISOString().slice(0, 10);
 
 export const seedAppointments: Appointment[] = [
-  { id: 'APT-001', patientId: 'PAT-000003', patientName: 'Suresh Patel', scheduledAt: `${today}T14:00:00`, type: 'Scheduled', status: 'Scheduled' },
-  { id: 'APT-002', patientId: 'PAT-000001', patientName: 'Rahul Verma', scheduledAt: `${today}T11:30:00`, type: 'Walk-In', status: 'Completed' },
+  {
+    id: 'APT-001',
+    patientId: 'PAT-000003',
+    patientName: 'Suresh Patel',
+    scheduledAt: `${today}T14:00:00`,
+    type: 'Scheduled',
+    status: 'Scheduled',
+    orderId: 'ORD-2026-0005',
+    testIds: ['TST-FBS', 'TST-TSH'],
+    testNames: ['Fasting Blood Sugar', 'Thyroid Profile (TSH)'],
+    orderTotal: 470,
+    notes: 'Fasting sample required',
+    referringDoctor: 'Dr. Anil Kapoor',
+    priority: 'Normal',
+    healthPackageName: 'Diabetes Package',
+    healthPackageId: 'PKG-DIABETES',
+  },
+  {
+    id: 'APT-002',
+    patientId: 'PAT-000001',
+    patientName: 'Rahul Verma',
+    scheduledAt: `${today}T11:30:00`,
+    type: 'Walk-In',
+    status: 'Completed',
+    orderId: 'ORD-2026-0001',
+    testIds: ['TST-CBC', 'TST-FBS'],
+    testNames: ['Complete Blood Count', 'Fasting Blood Sugar'],
+    orderTotal: 570,
+    referringDoctor: 'Dr. Sunita Rao',
+    priority: 'Urgent',
+  },
 ];
 
 function cloneSeed(): Appointment[] {
@@ -48,12 +77,20 @@ function getNextAppointmentId(appointments: Appointment[] = getAppointments()): 
   return `APT-${String(max + 1).padStart(3, '0')}`;
 }
 
-export function addAppointment(input: {
+export function addBooking(input: {
   patientId: string;
   patientName: string;
   scheduledAt: string;
   type: Appointment['type'];
   notes?: string;
+  referringDoctor?: string;
+  priority?: OrderPriority;
+  healthPackageId?: string;
+  healthPackageName?: string;
+  orderId: string;
+  testIds: string[];
+  testNames: string[];
+  orderTotal: number;
 }): Appointment {
   const appointments = getAppointments();
   const created: Appointment = {
@@ -64,6 +101,14 @@ export function addAppointment(input: {
     type: input.type,
     status: 'Scheduled',
     notes: input.notes?.trim() || undefined,
+    referringDoctor: input.referringDoctor,
+    priority: input.priority ?? 'Normal',
+    healthPackageId: input.healthPackageId,
+    healthPackageName: input.healthPackageName,
+    orderId: input.orderId,
+    testIds: input.testIds,
+    testNames: input.testNames,
+    orderTotal: input.orderTotal,
   };
   memoryAppointments = [...appointments, created];
   saveAppointments(memoryAppointments);

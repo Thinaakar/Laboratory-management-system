@@ -1,26 +1,39 @@
-import { FlaskConical } from 'lucide-react';
+import Image from 'next/image';
 import { cn } from '@/lib/utils';
 
 type LogoSize = 'sm' | 'md' | 'lg';
 
-const ICON_SIZE: Record<LogoSize, number> = {
-  sm: 22,
-  md: 24,
-  lg: 28,
+const LOGO_HEIGHT: Record<LogoSize, number> = {
+  sm: 28,
+  md: 34,
+  lg: 42,
+};
+
+const LOGO_WIDTH: Record<LogoSize, number> = {
+  sm: 112,
+  md: 136,
+  lg: 168,
 };
 
 interface LabCoreLogoProps {
   size?: LogoSize;
   className?: string;
+  priority?: boolean;
 }
 
-export function LabCoreLogo({ size = 'sm', className }: LabCoreLogoProps) {
+export function LabCoreLogo({ size = 'sm', className, priority = false }: LabCoreLogoProps) {
+  const height = LOGO_HEIGHT[size];
+  const width = LOGO_WIDTH[size];
+
   return (
-    <FlaskConical
-      size={ICON_SIZE[size]}
-      className={cn('shrink-0 text-primary', className)}
-      strokeWidth={2.25}
-      aria-hidden
+    <Image
+      src="/images/xangam-logo.png"
+      alt="Xangam"
+      width={width}
+      height={height}
+      priority={priority}
+      className={cn('h-auto w-auto shrink-0 object-contain object-left', className)}
+      style={{ maxHeight: height, width: 'auto', maxWidth: width }}
     />
   );
 }

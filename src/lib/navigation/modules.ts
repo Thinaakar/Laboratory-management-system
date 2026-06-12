@@ -47,17 +47,6 @@ export const LIMS_NAV: NavGroup[] = [
     items: WORKFLOW_STEPS,
   },
   {
-    title: 'Catalog',
-    items: [
-      {
-        label: 'Catalog',
-        href: '/tests',
-        permission: 'tests.read',
-        activePaths: ['/tests', '/tests/packages'],
-      },
-    ],
-  },
-  {
     title: 'Operations',
     items: [
       {
@@ -86,7 +75,21 @@ export const LIMS_NAV: NavGroup[] = [
       },
       { label: 'Branches', href: '/admin/branches', permission: 'settings.update' },
       { label: 'Audit Logs', href: '/admin/audit', permission: 'audit.read' },
-      { label: 'Settings', href: '/settings', permission: 'settings.read' },
+      {
+        label: 'Settings',
+        href: '/settings/general',
+        permission: 'settings.read',
+        activePaths: [
+          '/settings',
+          '/settings/general',
+          '/settings/tests',
+          '/settings/packages',
+          '/settings/departments',
+          '/settings/doctors',
+          '/tests',
+          '/tests/packages',
+        ],
+      },
     ],
   },
 ];

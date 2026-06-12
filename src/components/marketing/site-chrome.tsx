@@ -7,11 +7,8 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-50 border-b border-muted-border bg-white/95 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
-        <Link href="/" className="flex items-center gap-2.5">
-          <LabCoreLogo size="md" />
-          <div>
-            <span className="font-semibold text-slate-900">LabCore</span>
-          </div>
+        <Link href="/" className="flex items-center">
+          <LabCoreLogo size="md" priority />
         </Link>
 
         <nav className="hidden items-center gap-7 md:flex">
@@ -60,9 +57,8 @@ export function SiteFooter() {
     <footer className="bg-sidebar text-slate-300">
       <div className="mx-auto grid max-w-6xl gap-10 px-6 py-14 md:grid-cols-2 lg:grid-cols-5">
         <div className="lg:col-span-2">
-          <Link href="/" className="flex items-center gap-2">
+          <Link href="/" className="inline-flex">
             <LabCoreLogo size="sm" />
-            <span className="font-semibold text-white">LabCore LIMS</span>
           </Link>
           <p className="mt-4 max-w-xs text-sm leading-relaxed text-slate-400">
             Production-grade laboratory information management for diagnostic centers, pathology labs, and health checkup facilities.

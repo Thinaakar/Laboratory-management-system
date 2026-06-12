@@ -45,9 +45,6 @@ const ICONS: Record<string, React.ReactNode> = {
   Results: <Beaker size={18} />,
   'Report Approval': <ClipboardCheck size={18} />,
   Reports: <FileText size={18} />,
-  'Test Catalog': <Activity size={18} />,
-  Catalog: <Activity size={18} />,
-  'Health Packages': <Package size={18} />,
   Operations: <Layers size={18} />,
   Inventory: <Boxes size={18} />,
   Suppliers: <Truck size={18} />,
@@ -89,12 +86,8 @@ export function LimsSidebar() {
   return (
     <aside className="lims-sidebar flex h-full w-60 shrink-0 flex-col border-r border-white/10">
       <div className="border-b border-white/10 px-4 py-4">
-        <Link href="/dashboard" className="flex items-center gap-2">
-          <LabCoreLogo size="sm" />
-          <div>
-            <p className="text-sm font-semibold text-white">LabCore</p>
-            <p className="text-[10px] uppercase tracking-wider text-slate-400">LIMS</p>
-          </div>
+        <Link href="/dashboard" className="inline-flex">
+          <LabCoreLogo size="md" priority />
         </Link>
       </div>
 

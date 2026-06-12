@@ -59,15 +59,7 @@ export function LoginHeroPanel() {
       <div className="relative z-10 flex flex-1 flex-col justify-between px-6 py-8 sm:px-10 lg:px-14 lg:py-10 xl:px-16">
         {/* Logo */}
         <div>
-          <div className="flex items-center gap-3">
-            <LabCoreLogo size="lg" />
-            <div>
-              <p className="text-lg font-bold tracking-tight text-white">LabCore</p>
-              <p className="text-[11px] font-medium text-slate-400">
-                Laboratory Information Management System
-              </p>
-            </div>
-          </div>
+          <LabCoreLogo size="lg" priority />
         </div>
 
         {/* Headline + features */}

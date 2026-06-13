@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { SettingsShell } from '@/components/lims/settings/settings-shell';
-import { getDepartments } from '@/lib/data/store';
+import { SettingsShell } from "@/components/lims/settings/settings-shell";
+import { getDepartments } from "@/lib/data/store";
 
 export default function SettingsDepartmentsPage() {
   const departments = getDepartments();

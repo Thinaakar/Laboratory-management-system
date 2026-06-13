@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { SettingsShell } from '@/components/lims/settings/settings-shell';
-import { StatusBadge } from '@/components/lims/status-badge';
-import { getTests } from '@/lib/data/store';
-import { formatCurrency } from '@/lib/utils';
+import { SettingsShell } from "@/components/lims/settings/settings-shell";
+import { StatusBadge } from "@/components/lims/status-badge";
+import { getTests } from "@/lib/data/store";
+import { formatCurrency } from "@/lib/utils";
 
 export default function SettingsTestsPage() {
   const tests = getTests();
@@ -33,13 +33,13 @@ export default function SettingsTestsPage() {
                 <td>{t.departmentName}</td>
                 <td>{t.sampleType}</td>
                 <td>{t.turnaroundHours}</td>
-                <td>{t.unit ?? '—'}</td>
-                <td className="text-xs">{t.referenceRange ?? '—'}</td>
+                <td>{t.unit ?? "—"}</td>
+                <td className="text-xs">{t.referenceRange ?? "—"}</td>
                 <td>{formatCurrency(t.price)}</td>
                 <td>
                   <StatusBadge
-                    label={t.isActive ? 'Active' : 'Inactive'}
-                    variant={t.isActive ? 'success' : 'neutral'}
+                    label={t.isActive ? "Active" : "Inactive"}
+                    variant={t.isActive ? "success" : "neutral"}
                   />
                 </td>
               </tr>

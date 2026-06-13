@@ -16,6 +16,8 @@ import {
   LayoutDashboard,
   LogOut,
   Package,
+  PanelLeftClose,
+  PanelLeftOpen,
   ScrollText,
   Settings,
   Shield,
@@ -88,24 +90,109 @@ function isNavActive(
   return pathname.startsWith(`${href}/`);
 }
 
+const SIDEBAR_STORAGE_KEY = "labcore-sidebar-collapsed";
+
+function UserAvatar({ name, title }: { name: string; title?: string }) {
+  const letter = (name?.[0] ?? "U").toUpperCase();
+  return (
+    <div
+      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/20 text-sm font-semibold text-primary"
+      aria-hidden
+      title={title}
+    >
+      {letter}
+    </div>
+  );
+}
+
 export function LimsSidebar() {
   const pathname = usePathname();
   const { can } = usePermissions();
   const [session, setSession] = useState<SessionUser | null>(null);
+  const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
     setSession(getSession());
+    try {
+      setCollapsed(localStorage.getItem(SIDEBAR_STORAGE_KEY) === "true");
+    } catch {
+      /* ignore */
+    }
   }, []);
 
+  function toggleCollapsed() {
+    setCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem(SIDEBAR_STORAGE_KEY, String(next));
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
+  }
+
+  function handleSignOut() {
+    if (session) {
+      logAuditAction({
+        action: "LOGOUT",
+        module: "auth",
+        details: "User signed out",
+        userId: session.email,
+        userName: session.name,
+      });
+    }
+    clearSession();
+    window.location.href = "/login";
+  }
+
+  const displayName = session?.name ?? "User";
+
   return (
-    <aside className="lims-sidebar flex h-full w-[15.5rem] shrink-0 flex-col border-r border-white/[0.06]">
-      <div className="border-b border-white/[0.06] px-3.5 py-3.5">
-        <Link href="/dashboard" className="inline-flex">
-          <LabCoreLogo size="md" priority />
-        </Link>
+    <aside
+      className={cn(
+        "lims-sidebar flex h-full shrink-0 flex-col border-r border-white/[0.06]",
+        collapsed && "lims-sidebar--collapsed",
+      )}
+    >
+      <div
+        className={cn(
+          "relative flex shrink-0 items-center border-b border-white/[0.06] py-3.5",
+          collapsed ? "justify-center px-2" : "gap-2 px-3",
+        )}
+      >
+        {!collapsed && (
+          <Link
+            href="/dashboard"
+            className="relative z-0 inline-flex min-w-0 flex-1 overflow-hidden"
+          >
+            <LabCoreLogo size="md" priority />
+          </Link>
+        )}
+        <button
+          type="button"
+          onClick={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            toggleCollapsed();
+          }}
+          className={cn(
+            "lims-sidebar-toggle h-9 w-9",
+            !collapsed && "ml-auto",
+          )}
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          aria-expanded={!collapsed}
+        >
+          {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
+        </button>
       </div>
 
-      <nav className="flex-1 space-y-3 overflow-y-auto no-scrollbar px-2 py-2.5">
+      <nav
+        className={cn(
+          "flex-1 space-y-3 overflow-y-auto no-scrollbar py-2.5",
+          collapsed ? "px-1.5" : "px-2",
+        )}
+      >
         {LIMS_NAV.map((group) => {
           const items = group.items.filter((item) => {
             if (item.permissions?.length) {
@@ -114,9 +201,9 @@ export function LimsSidebar() {
             return !item.permission || can(item.permission);
           });
           if (!items.length) return null;
-          const showGroupTitle = !(
-            items.length === 1 && items[0].label === group.title
-          );
+          const showGroupTitle =
+            !collapsed &&
+            !(items.length === 1 && items[0].label === group.title);
           return (
             <div key={group.title}>
               {showGroupTitle && (
@@ -139,13 +226,17 @@ export function LimsSidebar() {
                     <li key={`${group.title}-${item.href}`}>
                       <Link
                         href={href}
+                        title={collapsed ? item.label : undefined}
                         className={cn(
                           "lims-nav-link",
                           active && "lims-nav-link-active",
+                          collapsed && "justify-center px-2",
                         )}
                       >
                         {ICONS[item.label] ?? <Activity size={18} />}
-                        <span className="truncate">{item.label}</span>
+                        {!collapsed && (
+                          <span className="truncate">{item.label}</span>
+                        )}
                       </Link>
                     </li>
                   );
@@ -156,32 +247,46 @@ export function LimsSidebar() {
         })}
       </nav>
 
-      <div className="border-t border-white/[0.06] p-2.5">
-        <p className="truncate px-2 text-xs font-medium text-white">
-          {session?.name ?? "User"}
-        </p>
-        <p className="truncate px-2 text-[10px] text-slate-400">
-          {session?.role ?? ""}
-        </p>
-        <button
-          type="button"
-          onClick={() => {
-            if (session) {
-              logAuditAction({
-                action: "LOGOUT",
-                module: "auth",
-                details: "User signed out",
-                userId: session.email,
-                userName: session.name,
-              });
-            }
-            clearSession();
-            window.location.href = "/login";
-          }}
-          className="lims-nav-link mt-2 w-full text-left text-red-300 hover:text-red-200"
-        >
-          <LogOut size={16} /> Sign out
-        </button>
+      <div
+        className={cn(
+          "border-t border-white/[0.06] p-2.5",
+          collapsed && "flex flex-col items-center gap-2",
+        )}
+      >
+        {collapsed ? (
+          <>
+            <UserAvatar name={displayName} title={displayName} />
+            <button
+              type="button"
+              onClick={handleSignOut}
+              title="Sign out"
+              className="lims-nav-link justify-center px-2 text-red-300 hover:text-red-200"
+            >
+              <LogOut size={16} />
+            </button>
+          </>
+        ) : (
+          <>
+            <div className="flex items-center gap-2.5 px-2">
+              <UserAvatar name={displayName} />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-xs font-medium text-white">
+                  {displayName}
+                </p>
+                <p className="truncate text-[10px] text-slate-400">
+                  {session?.role ?? ""}
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="lims-nav-link mt-2 w-full text-left text-red-300 hover:text-red-200"
+            >
+              <LogOut size={16} /> Sign out
+            </button>
+          </>
+        )}
       </div>
     </aside>
   );

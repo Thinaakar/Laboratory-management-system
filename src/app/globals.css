@@ -110,6 +110,24 @@
   /* ── Sidebar ── */
   .lims-sidebar {
     @apply bg-sidebar text-slate-200 shadow-[1px_0_0_0_rgba(255,255,255,0.06)];
+    width: 15.5rem;
+    min-width: 15.5rem;
+    max-width: 15.5rem;
+    overflow: hidden;
+    transition:
+      width 200ms ease-in-out,
+      min-width 200ms ease-in-out,
+      max-width 200ms ease-in-out;
+  }
+
+  .lims-sidebar.lims-sidebar--collapsed {
+    width: 3.75rem;
+    min-width: 3.75rem;
+    max-width: 3.75rem;
+  }
+
+  .lims-sidebar-toggle {
+    @apply relative z-20 flex shrink-0 cursor-pointer items-center justify-center rounded-md text-slate-400 transition-colors hover:bg-white/[0.06] hover:text-slate-100;
   }
 
   .lims-nav-link {

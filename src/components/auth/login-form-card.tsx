@@ -218,7 +218,7 @@ export function LoginFormCard() {
                   Authenticating...
                 </span>
               ) : (
-                'Sign In to Dashboard'
+                'Sign In'
               )}
             </button>
 

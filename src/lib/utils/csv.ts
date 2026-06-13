@@ -27,3 +27,23 @@ export function downloadCsv(filename: string, rows: Record<string, string | numb
   link.click();
   URL.revokeObjectURL(url);
 }
+
+export interface TableCsvColumn<T> {
+  header: string;
+  exportValue: (row: T) => string | number | undefined | null;
+}
+
+export function downloadTableCsv<T>(
+  filename: string,
+  columns: TableCsvColumn<T>[],
+  data: T[],
+): void {
+  if (!data.length || !columns.length) return;
+  const rows = data.map((row) =>
+    columns.reduce<Record<string, string | number | undefined | null>>((acc, col) => {
+      acc[col.header] = col.exportValue(row);
+      return acc;
+    }, {}),
+  );
+  downloadCsv(filename, rows);
+}

@@ -6,5 +6,5 @@ const playfair = Playfair_Display({
 });
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
-  return <div className={`${playfair.variable} min-h-screen font-sans`}>{children}</div>;
+  return <div className={`${playfair.variable} min-h-screen auth-premium-layout`}>{children}</div>;
 }

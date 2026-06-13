@@ -2,7 +2,7 @@ import { SiteFooter, SiteHeader } from '@/components/marketing/site-chrome';
 
 export default function MarketingLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-white text-slate-900">
+    <div className="min-h-screen bg-white text-slate-900 marketing-premium-layout">
       <SiteHeader />
       <main>{children}</main>
       <SiteFooter />

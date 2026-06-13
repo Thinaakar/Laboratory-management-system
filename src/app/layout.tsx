@@ -1,8 +1,16 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter } from 'next/font/google';
+import { Inter, Plus_Jakarta_Sans, Manrope } from 'next/font/google';
 import './globals.css';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
+const plusJakartaSans = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  variable: '--font-plus-jakarta-sans',
+});
+const manrope = Manrope({
+  subsets: ['latin'],
+  variable: '--font-manrope',
+});
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -32,7 +40,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.variable} suppressHydrationWarning>{children}</body>
+      <body className={`${inter.variable} ${plusJakartaSans.variable} ${manrope.variable}`} suppressHydrationWarning>
+        {children}
+      </body>
     </html>
   );
 }

@@ -1,8 +1,17 @@
-'use client';
+"use client";
 
-import { ChevronDown, ChevronLeft, ChevronRight, ChevronsUpDown, ChevronUp, Search } from 'lucide-react';
-import { HydrationSafeInput } from '@/components/lims/client-only';
-import { cn } from '@/lib/utils';
+import {
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsUpDown,
+  ChevronUp,
+  Download,
+  Search,
+} from "lucide-react";
+import { HydrationSafeInput } from "@/components/lims/client-only";
+import { downloadTableCsv } from "@/lib/utils/csv";
+import { cn } from "@/lib/utils";
 
 export interface DataTableColumn<T> {
   key: string;
@@ -12,6 +21,7 @@ export interface DataTableColumn<T> {
   headerClassName?: string;
   render: (row: T) => React.ReactNode;
   sortValue?: (row: T) => string | number;
+  exportValue?: (row: T) => string | number | undefined | null;
 }
 
 interface DataTableProps<T> {
@@ -26,7 +36,7 @@ interface DataTableProps<T> {
   };
   filters?: React.ReactNode;
   sortKey?: string | null;
-  sortDir?: 'asc' | 'desc';
+  sortDir?: "asc" | "desc";
   onSort?: (key: string) => void;
   pagination?: {
     page: number;
@@ -36,6 +46,10 @@ interface DataTableProps<T> {
     onPageChange: (page: number) => void;
     onPageSizeChange?: (size: number) => void;
   };
+  download?: {
+    filename: string;
+    data: T[];
+  };
   className?: string;
   stickyHeader?: boolean;
 }
@@ -44,24 +58,41 @@ export function DataTable<T>({
   columns,
   data,
   rowKey,
-  emptyMessage = 'No records found.',
+  emptyMessage = "No records found.",
   search,
   filters,
   sortKey,
   sortDir,
   onSort,
   pagination,
+  download,
   className,
   stickyHeader = true,
 }: DataTableProps<T>) {
-  const start = pagination ? (pagination.page - 1) * pagination.pageSize + 1 : 1;
+  const exportColumns = columns.filter((col) => col.exportValue && col.key !== "actions");
+  const canDownload = Boolean(download && exportColumns.length);
+
+  const handleDownload = () => {
+    if (!download || !exportColumns.length) return;
+    downloadTableCsv(
+      download.filename,
+      exportColumns.map((col) => ({
+        header: col.header,
+        exportValue: col.exportValue!,
+      })),
+      download.data,
+    );
+  };
+  const start = pagination
+    ? (pagination.page - 1) * pagination.pageSize + 1
+    : 1;
   const end = pagination
     ? Math.min(pagination.page * pagination.pageSize, pagination.totalItems)
     : data.length;
 
   return (
-    <div className={cn('lims-table-card', className)}>
-      {(search || filters) && (
+    <div className={cn("lims-table-card", className)}>
+      {(search || filters || canDownload) && (
         <div className="lims-table-toolbar">
           {search && (
             <div className="relative min-w-0 flex-1 sm:max-w-xs">
@@ -73,17 +104,35 @@ export function DataTable<T>({
               <HydrationSafeInput
                 type="search"
                 className="lims-input pl-9"
-                placeholder={search.placeholder ?? 'Search…'}
+                placeholder={search.placeholder ?? "Search…"}
                 value={search.value}
                 onChange={(e) => search.onChange(e.target.value)}
               />
             </div>
           )}
-          {filters && <div className="flex flex-wrap items-center gap-2">{filters}</div>}
+          <div className="flex flex-wrap items-center gap-2 sm:ml-auto">
+            {filters}
+            {canDownload && (
+              <button
+                type="button"
+                onClick={handleDownload}
+                disabled={!download?.data.length}
+                className="lims-btn-secondary h-9 px-3 text-xs"
+              >
+                <Download className="h-3.5 w-3.5" />
+                Download
+              </button>
+            )}
+          </div>
         </div>
       )}
 
-      <div className={cn('lims-table-scroll', stickyHeader && 'lims-table-scroll-sticky')}>
+      <div
+        className={cn(
+          "lims-table-scroll",
+          stickyHeader && "lims-table-scroll-sticky",
+        )}
+      >
         <table className="lims-table">
           <thead>
             <tr>
@@ -96,21 +145,30 @@ export function DataTable<T>({
                       className="lims-table-sort-btn"
                       aria-sort={
                         sortKey === col.key
-                          ? sortDir === 'asc'
-                            ? 'ascending'
-                            : 'descending'
-                          : 'none'
+                          ? sortDir === "asc"
+                            ? "ascending"
+                            : "descending"
+                          : "none"
                       }
                     >
                       <span>{col.header}</span>
                       {sortKey === col.key ? (
-                        sortDir === 'asc' ? (
-                          <ChevronUp size={14} className="shrink-0 text-primary" />
+                        sortDir === "asc" ? (
+                          <ChevronUp
+                            size={14}
+                            className="shrink-0 text-primary"
+                          />
                         ) : (
-                          <ChevronDown size={14} className="shrink-0 text-primary" />
+                          <ChevronDown
+                            size={14}
+                            className="shrink-0 text-primary"
+                          />
                         )
                       ) : (
-                        <ChevronsUpDown size={14} className="shrink-0 opacity-40" />
+                        <ChevronsUpDown
+                          size={14}
+                          className="shrink-0 opacity-40"
+                        />
                       )}
                     </button>
                   ) : (
@@ -145,7 +203,8 @@ export function DataTable<T>({
       {pagination && pagination.totalItems > 0 && (
         <div className="lims-table-footer">
           <p className="lims-table-meta">
-            Showing {start}–{end} of {pagination.totalItems.toLocaleString('en-IN')}
+            Showing {start}–{end} of{" "}
+            {pagination.totalItems.toLocaleString("en-IN")}
           </p>
           <div className="flex items-center gap-3">
             {pagination.onPageSizeChange && (
@@ -154,7 +213,9 @@ export function DataTable<T>({
                 <select
                   className="lims-input h-8 w-[4.5rem] py-1 text-xs"
                   value={pagination.pageSize}
-                  onChange={(e) => pagination.onPageSizeChange?.(Number(e.target.value))}
+                  onChange={(e) =>
+                    pagination.onPageSizeChange?.(Number(e.target.value))
+                  }
                 >
                   {[10, 25, 50].map((n) => (
                     <option key={n} value={n}>

@@ -104,13 +104,14 @@ function AppointmentsContent() {
 
   const columns = useMemo(
     () => [
-      { key: 'patient', header: 'Patient', sortable: true, className: 'font-medium text-slate-900', render: (b: Appointment) => b.patientName },
-      { key: 'scheduled', header: 'Scheduled', sortable: true, className: 'text-slate-600', render: (b: Appointment) => formatDateTime(b.scheduledAt) },
-      { key: 'type', header: 'Type', sortable: true, render: (b: Appointment) => b.type },
+      { key: 'patient', header: 'Patient', sortable: true, className: 'font-medium text-slate-900', render: (b: Appointment) => b.patientName, exportValue: (b: Appointment) => b.patientName },
+      { key: 'scheduled', header: 'Scheduled', sortable: true, className: 'text-slate-600', render: (b: Appointment) => formatDateTime(b.scheduledAt), exportValue: (b: Appointment) => formatDateTime(b.scheduledAt) },
+      { key: 'type', header: 'Type', sortable: true, render: (b: Appointment) => b.type, exportValue: (b: Appointment) => b.type },
       {
         key: 'status',
         header: 'Status',
         sortable: true,
+        exportValue: (b: Appointment) => b.status,
         render: (b: Appointment) => <StatusBadge label={b.status} variant={statusVariant(b.status)} />,
       },
       { key: 'actions', header: '', className: 'w-28', render: rowActions },
@@ -201,6 +202,7 @@ function AppointmentsContent() {
               onPageChange: table.setPage,
               onPageSizeChange: table.setPageSize,
             }}
+            download={{ filename: 'appointments', data: table.allRows }}
           />
         </>
       )}

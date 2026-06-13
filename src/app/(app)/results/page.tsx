@@ -1,6 +1,6 @@
 'use client';
 
-import { Plus } from 'lucide-react';
+import { Download, Plus } from 'lucide-react';
 import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { PageHeader } from '@/components/lims/page-header';
@@ -8,6 +8,7 @@ import { FlashBanner } from '@/components/lims/flash-banner';
 import { EnterResultsModal } from '@/components/lims/results/enter-results-modal';
 import { StatusBadge, statusVariant } from '@/components/lims/status-badge';
 import { getResults } from '@/lib/data/store';
+import { downloadTableCsv } from '@/lib/utils/csv';
 import { cn, formatDateTime } from '@/lib/utils';
 
 type ResultsFilter = 'all' | 'pending';
@@ -119,6 +120,30 @@ function ResultsContent() {
       </div>
 
       <div className="lims-card overflow-hidden">
+        <div className="flex justify-end border-b border-muted-border px-4 py-3">
+          <button
+            type="button"
+            onClick={() =>
+              downloadTableCsv('results', [
+                { header: 'Result ID', exportValue: (r) => r.id },
+                { header: 'Test', exportValue: (r) => r.testName },
+                { header: 'Sample', exportValue: (r) => r.sampleId },
+                { header: 'Order', exportValue: (r) => r.orderId },
+                { header: 'Value', exportValue: (r) => (r.unit ? `${r.value} ${r.unit}` : r.value) },
+                { header: 'Reference', exportValue: (r) => r.referenceRange ?? '' },
+                { header: 'Critical', exportValue: (r) => (r.isCritical ? 'Yes' : 'No') },
+                { header: 'Queue', exportValue: (r) => r.queueStatus },
+                { header: 'Approval', exportValue: (r) => r.approvalStatus },
+                { header: 'Entered', exportValue: (r) => (r.enteredAt ? formatDateTime(r.enteredAt) : '') },
+              ], displayed)
+            }
+            disabled={!displayed.length}
+            className="lims-btn-secondary h-9 px-3 text-xs"
+          >
+            <Download className="h-3.5 w-3.5" />
+            Download
+          </button>
+        </div>
         <div className="overflow-x-auto">
           <table className="lims-table">
             <thead>

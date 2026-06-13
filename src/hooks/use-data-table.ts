@@ -66,6 +66,7 @@ export function useDataTable<T>({
 
   return {
     rows,
+    allRows: sorted,
     page: safePage,
     pageSize,
     totalItems,

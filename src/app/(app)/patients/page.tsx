@@ -116,13 +116,14 @@ function PatientsContent() {
 
   const columns = useMemo(
     () => [
-      { key: 'id', header: 'Patient ID', sortable: true, className: 'font-mono text-xs text-slate-600', render: (p: Patient) => p.id },
-      { key: 'name', header: 'Name', sortable: true, className: 'font-medium text-slate-900', render: (p: Patient) => p.name },
-      { key: 'phone', header: 'Phone', sortable: true, render: (p: Patient) => p.phone },
+      { key: 'id', header: 'Patient ID', sortable: true, className: 'font-mono text-xs text-slate-600', render: (p: Patient) => p.id, exportValue: (p: Patient) => p.id },
+      { key: 'name', header: 'Name', sortable: true, className: 'font-medium text-slate-900', render: (p: Patient) => p.name, exportValue: (p: Patient) => p.name },
+      { key: 'phone', header: 'Phone', sortable: true, render: (p: Patient) => p.phone, exportValue: (p: Patient) => p.phone },
       {
         key: 'type',
         header: 'Type',
         sortable: true,
+        exportValue: (p: Patient) => p.patientType ?? '',
         render: (p: Patient) =>
           p.patientType ? <StatusBadge label={p.patientType} variant={patientTypeVariant(p.patientType)} /> : '—',
       },
@@ -216,6 +217,7 @@ function PatientsContent() {
               onPageChange: table.setPage,
               onPageSizeChange: table.setPageSize,
             }}
+            download={{ filename: 'patients', data: table.allRows }}
           />
         </>
       )}

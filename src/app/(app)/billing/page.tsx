@@ -92,13 +92,14 @@ function BillingContent() {
 
   const columns = useMemo(
     () => [
-      { key: 'id', header: 'Invoice ID', sortable: true, className: 'font-mono text-xs text-slate-600', render: (inv: Invoice) => inv.id },
-      { key: 'patient', header: 'Patient', sortable: true, className: 'font-medium text-slate-900', render: (inv: Invoice) => inv.patientName },
-      { key: 'amount', header: 'Amount', sortable: true, render: (inv: Invoice) => formatCurrency(inv.amount) },
+      { key: 'id', header: 'Invoice ID', sortable: true, className: 'font-mono text-xs text-slate-600', render: (inv: Invoice) => inv.id, exportValue: (inv: Invoice) => inv.id },
+      { key: 'patient', header: 'Patient', sortable: true, className: 'font-medium text-slate-900', render: (inv: Invoice) => inv.patientName, exportValue: (inv: Invoice) => inv.patientName },
+      { key: 'amount', header: 'Amount', sortable: true, render: (inv: Invoice) => formatCurrency(inv.amount), exportValue: (inv: Invoice) => inv.amount },
       {
         key: 'status',
         header: 'Status',
         sortable: true,
+        exportValue: (inv: Invoice) => inv.status,
         render: (inv: Invoice) => <StatusBadge label={inv.status} variant={statusVariant(inv.status)} />,
       },
       { key: 'actions', header: '', className: 'w-14', render: rowActions },
@@ -203,6 +204,7 @@ function BillingContent() {
               onPageChange: table.setPage,
               onPageSizeChange: table.setPageSize,
             }}
+            download={{ filename: 'invoices', data: table.allRows }}
           />
         </>
       )}

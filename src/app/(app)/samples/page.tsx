@@ -112,6 +112,7 @@ function SamplesContent() {
         sortable: true,
         className: 'font-mono text-xs text-slate-600',
         render: (s: Sample) => s.id,
+        exportValue: (s: Sample) => s.id,
       },
       {
         key: 'barcode',
@@ -119,6 +120,7 @@ function SamplesContent() {
         sortable: true,
         className: 'font-mono text-xs font-semibold text-slate-900',
         render: (s: Sample) => s.barcode,
+        exportValue: (s: Sample) => s.barcode,
       },
       {
         key: 'patient',
@@ -126,17 +128,20 @@ function SamplesContent() {
         sortable: true,
         className: 'font-medium text-slate-900',
         render: (s: Sample) => s.patientName,
+        exportValue: (s: Sample) => s.patientName,
       },
       {
         key: 'type',
         header: 'Type',
         sortable: true,
         render: (s: Sample) => s.sampleType,
+        exportValue: (s: Sample) => s.sampleType,
       },
       {
         key: 'status',
         header: 'Status',
         sortable: true,
+        exportValue: (s: Sample) => s.status,
         render: (s: Sample) => <StatusBadge label={s.status} variant={statusVariant(s.status)} />,
       },
       { key: 'actions', header: '', className: 'w-28', render: rowActions },
@@ -252,6 +257,7 @@ function SamplesContent() {
               onPageChange: table.setPage,
               onPageSizeChange: table.setPageSize,
             }}
+            download={{ filename: 'samples', data: table.allRows }}
           />
         </>
       )}

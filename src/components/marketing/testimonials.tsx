@@ -40,7 +40,7 @@ export function Testimonials() {
             <div key={t.lab} className="rounded-xl border border-muted-border bg-white p-6 shadow-card">
               <div className="flex gap-0.5">
                 {Array.from({ length: t.rating }).map((_, i) => (
-                  <Star key={i} size={16} className="fill-amber-400 text-amber-400" />
+                  <Star key={i} size={16} className="fill-orange-300 text-orange-300" />
                 ))}
               </div>
               <p className="mt-4 text-sm leading-relaxed text-slate-700">&ldquo;{t.quote}&rdquo;</p>

@@ -73,7 +73,7 @@ export function DashboardOverview({
       label: 'Revenue Today',
       value: formatCurrency(kpis.revenueToday),
       icon: Activity,
-      color: 'bg-amber-50 text-amber-600',
+      color: 'bg-sky-50 text-sky-600',
     },
   ];
 
@@ -181,7 +181,7 @@ export function DashboardOverview({
                 >
                   <span className="truncate font-medium text-slate-700">{row.label}</span>
                   {compact ? (
-                    <span className="shrink-0 rounded-full bg-amber-100 px-1.5 py-0.5 text-[8px] font-medium text-amber-700">
+                    <span className="shrink-0 rounded-full bg-orange-50 px-1.5 py-0.5 text-[8px] font-medium text-orange-600">
                       {row.status}
                     </span>
                   ) : (

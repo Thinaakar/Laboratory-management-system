@@ -123,7 +123,7 @@ export function MockScreen({ type }: { type: ScreenType }) {
     <div className="min-h-[140px] bg-muted-bg">
       <div className="flex items-center gap-1.5 border-b border-muted-border bg-white px-2 py-1.5">
         <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
-        <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+        <span className="h-1.5 w-1.5 rounded-full bg-orange-300" />
         <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
       </div>
       {screens[type]}

@@ -11,7 +11,8 @@ const ROLE_BADGE: Record<string, string> = {
   blue: 'bg-blue-50 text-blue-700 border-blue-200',
   emerald: 'bg-emerald-50 text-emerald-700 border-emerald-200',
   violet: 'bg-violet-50 text-violet-700 border-violet-200',
-  amber: 'bg-amber-50 text-amber-700 border-amber-200',
+  amber: 'bg-orange-50 text-orange-600 border-orange-100',
+  orange: 'bg-orange-50 text-orange-600 border-orange-100',
 };
 
 interface RolesTableProps {

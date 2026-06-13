@@ -111,7 +111,7 @@
   }
 
   .lims-badge-warning {
-    @apply lims-badge bg-amber-50 text-amber-700;
+    @apply lims-badge bg-orange-50 text-orange-600;
   }
 
   .lims-badge-error {

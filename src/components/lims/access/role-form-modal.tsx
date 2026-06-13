@@ -16,7 +16,7 @@ interface RoleFormModalProps {
   }) => void;
 }
 
-const COLORS = ['primary', 'blue', 'emerald', 'violet', 'amber'];
+const COLORS = ['primary', 'blue', 'emerald', 'violet', 'orange'];
 
 export function RoleFormModal({ mode, role, onClose, onSave }: RoleFormModalProps) {
   const [label, setLabel] = useState(role?.label ?? '');

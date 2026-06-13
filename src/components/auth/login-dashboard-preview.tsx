@@ -37,7 +37,7 @@ export function LoginDashboardPreview() {
           {['SMP-2026-0041 · CBC', 'SMP-2026-0042 · LFT', 'SMP-2026-0043 · TSH'].map((row) => (
             <div key={row} className="flex items-center justify-between rounded bg-white/5 px-2 py-1.5">
               <span className="text-[9px] text-white/50">{row}</span>
-              <span className="rounded-full bg-amber-400/20 px-1.5 py-0.5 text-[8px] text-amber-200">Pending</span>
+              <span className="rounded-full bg-orange-300/20 px-1.5 py-0.5 text-[8px] text-orange-100">Pending</span>
             </div>
           ))}
         </div>

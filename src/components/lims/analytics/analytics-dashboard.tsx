@@ -64,7 +64,7 @@ export function AnalyticsDashboard() {
       label: 'Pending Tests',
       value: String(kpis.pendingTests),
       icon: Activity,
-      color: 'bg-amber-50 text-amber-600',
+      color: 'bg-sky-50 text-sky-600',
       sub: 'Awaiting approval',
     },
     {

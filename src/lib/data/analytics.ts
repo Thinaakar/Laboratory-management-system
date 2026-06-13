@@ -50,7 +50,7 @@ export interface AnalyticsSnapshot {
 const PIE_COLORS = {
   primary: '#53bdeb',
   emerald: '#10b981',
-  amber: '#f59e0b',
+  amber: '#fdba74',
   violet: '#8b5cf6',
   rose: '#f43f5e',
   slate: '#94a3b8',

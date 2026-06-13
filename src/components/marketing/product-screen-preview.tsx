@@ -36,7 +36,7 @@ function BrowserChrome({ children }: { children: React.ReactNode }) {
     <div className="overflow-hidden bg-muted-bg">
       <div className="flex items-center gap-1.5 border-b border-muted-border bg-white px-3 py-2">
         <span className="h-2 w-2 rounded-full bg-red-400" />
-        <span className="h-2 w-2 rounded-full bg-amber-400" />
+        <span className="h-2 w-2 rounded-full bg-orange-300" />
         <span className="h-2 w-2 rounded-full bg-emerald-400" />
       </div>
       <div className="max-h-[220px] overflow-hidden bg-muted-bg p-2 sm:p-3">{children}</div>

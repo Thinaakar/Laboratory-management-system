@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { PageHeader } from '@/components/lims/page-header';
+import { UserManagementShell } from '@/components/lims/access/user-management-shell';
 import { getAuditLogs } from '@/lib/data/audit-store';
 import type { AuditLogEntry } from '@/lib/types/lims';
 import { formatDateTime } from '@/lib/utils';
@@ -16,8 +16,7 @@ export default function AuditPage() {
   }, []);
 
   return (
-    <div>
-      <PageHeader title="Audit Logs" description="Critical operation history for compliance" />
+    <UserManagementShell>
       <div className="lims-card overflow-x-auto">
         <table className="lims-table">
           <thead>
@@ -44,6 +43,6 @@ export default function AuditPage() {
           </tbody>
         </table>
       </div>
-    </div>
+    </UserManagementShell>
   );
 }

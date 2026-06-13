@@ -12,7 +12,7 @@ export function UserManagementShell({ children }: UserManagementShellProps) {
     <div>
       <PageHeader
         title="User Management"
-        description="Staff accounts, roles, and access permissions"
+        description="Staff accounts, roles, permissions, and audit trail"
       />
       <AdminAccessTabs />
       {children}

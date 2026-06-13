@@ -59,10 +59,9 @@ export const LIMS_NAV: NavGroup[] = [
       {
         label: 'User Management',
         href: '/admin/users',
-        permission: 'users.read',
-        activePaths: ['/admin/users', '/admin/roles', '/admin/permissions'],
+        permissions: ['users.read', 'audit.read'],
+        activePaths: ['/admin/users', '/admin/roles', '/admin/permissions', '/admin/audit'],
       },
-      { label: 'Audit Logs', href: '/admin/audit', permission: 'audit.read' },
       {
         label: 'Settings',
         href: '/settings',

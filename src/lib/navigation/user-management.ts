@@ -6,6 +6,7 @@ export const USER_MANAGEMENT_PATHS = [
   '/admin/users',
   '/admin/roles',
   '/admin/permissions',
+  '/admin/audit',
 ] as const;
 
 export function isUserManagementPath(pathname: string): boolean {

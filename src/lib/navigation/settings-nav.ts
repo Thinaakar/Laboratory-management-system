@@ -8,6 +8,7 @@ export const SETTINGS_MASTER_DATA_PATHS = [
   '/settings/tests',
   '/settings/packages',
   '/settings/departments',
+  '/settings/sample-types',
   '/settings/doctors',
   '/settings/branches',
 ] as const;

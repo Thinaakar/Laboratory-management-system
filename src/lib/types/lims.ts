@@ -27,17 +27,19 @@ export interface Branch {
 
 export type PatientType = 'Walk-In' | 'Scheduled' | 'Corporate' | 'Insurance' | 'Camp';
 
+export type BloodGroup = 'A+' | 'A-' | 'B+' | 'B-' | 'AB+' | 'AB-' | 'O+' | 'O-';
+
 export interface Patient {
   id: string;
   branchId?: string;
   firstName: string;
   lastName?: string;
   name: string;
-  email?: string;
   phone: string;
   dateOfBirth?: string;
   age?: number;
   gender: 'Male' | 'Female' | 'Other';
+  bloodGroup?: BloodGroup;
   address?: string;
   referredDoctor?: string;
   patientType?: PatientType;
@@ -48,6 +50,13 @@ export interface TestDepartment {
   id: string;
   name: string;
   code: string;
+}
+
+export interface SampleType {
+  id: string;
+  name: string;
+  code: string;
+  isActive: boolean;
 }
 
 export interface LabTest {

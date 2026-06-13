@@ -1,9 +1,10 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Plus, Search, Shield, Users, Pencil, Trash2 } from 'lucide-react';
-import type { LimsRole } from '@/lib/data/roles-store';
+import { Plus, Search, Shield, Users } from 'lucide-react';
+import { isSuperAdminRole, type LimsRole } from '@/lib/data/roles-store';
 import { StatusBadge } from '@/components/lims/status-badge';
+import { TableRowActions } from '@/components/lims/table-row-actions';
 import { cn } from '@/lib/utils';
 
 const ROLE_BADGE: Record<string, string> = {
@@ -19,11 +20,12 @@ interface RolesTableProps {
   roles: LimsRole[];
   getUserCountByRole: (name: string) => number;
   onCreate: () => void;
+  onView: (role: LimsRole) => void;
   onEdit: (role: LimsRole) => void;
   onDelete: (role: LimsRole) => void;
 }
 
-export function RolesTable({ roles, getUserCountByRole, onCreate, onEdit, onDelete }: RolesTableProps) {
+export function RolesTable({ roles, getUserCountByRole, onCreate, onView, onEdit, onDelete }: RolesTableProps) {
   const [search, setSearch] = useState('');
 
   const filtered = useMemo(() => {
@@ -97,24 +99,11 @@ export function RolesTable({ roles, getUserCountByRole, onCreate, onEdit, onDele
                   <StatusBadge label={role.status} variant={role.status === 'Active' ? 'success' : 'neutral'} />
                 </td>
                 <td>
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => onEdit(role)}
-                      className="lims-btn-secondary px-2 py-1 text-xs"
-                    >
-                      <Pencil className="h-3 w-3" /> Edit
-                    </button>
-                    {!role.isSystem && (
-                      <button
-                        type="button"
-                        onClick={() => onDelete(role)}
-                        className="rounded-md border border-red-200 px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50"
-                      >
-                        <Trash2 className="h-3 w-3" /> Delete
-                      </button>
-                    )}
-                  </div>
+                  <TableRowActions
+                    onView={() => onView(role)}
+                    onEdit={() => onEdit(role)}
+                    onDelete={isSuperAdminRole(role) ? undefined : () => onDelete(role)}
+                  />
                 </td>
               </tr>
             ))}

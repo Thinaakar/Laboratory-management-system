@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { useEffect, useState } from 'react';
-import { usePathname } from 'next/navigation';
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import {
   Activity,
   BarChart3,
@@ -28,14 +28,18 @@ import {
   Wrench,
   Boxes,
   Layers,
-} from 'lucide-react';
-import { LabCoreLogo } from '@/components/lims/labcore-logo';
-import { LIMS_NAV } from '@/lib/navigation/modules';
-import { getDefaultSettingsPath } from '@/lib/navigation/settings-nav';
-import { clearSession, getSession, type SessionUser } from '@/lib/auth/demo-users';
-import { logAuditAction } from '@/lib/audit/log-action';
-import { usePermissions } from '@/hooks/use-permissions';
-import { cn } from '@/lib/utils';
+} from "lucide-react";
+import { LabCoreLogo } from "@/components/lims/labcore-logo";
+import { LIMS_NAV } from "@/lib/navigation/modules";
+import { getDefaultSettingsPath } from "@/lib/navigation/settings-nav";
+import {
+  clearSession,
+  getSession,
+  type SessionUser,
+} from "@/lib/auth/demo-users";
+import { logAuditAction } from "@/lib/audit/log-action";
+import { usePermissions } from "@/hooks/use-permissions";
+import { cn } from "@/lib/utils";
 
 const ICONS: Record<string, React.ReactNode> = {
   Dashboard: <LayoutDashboard size={18} />,
@@ -45,34 +49,41 @@ const ICONS: Record<string, React.ReactNode> = {
   Billing: <Wallet size={18} />,
   Samples: <TestTube2 size={18} />,
   Results: <Beaker size={18} />,
-  'Report Approval': <ClipboardCheck size={18} />,
+  "Report Approval": <ClipboardCheck size={18} />,
   Reports: <FileText size={18} />,
-  'Health Packages': <Package size={18} />,
+  "Health Packages": <Package size={18} />,
   Operations: <Layers size={18} />,
   Inventory: <Boxes size={18} />,
   Suppliers: <Truck size={18} />,
   Equipment: <Wrench size={18} />,
   Referrals: <Stethoscope size={18} />,
   Analytics: <BarChart3 size={18} />,
-  'User Management': <UserCog size={18} />,
-  'Users & Roles': <UserCog size={18} />,
+  "User Management": <UserCog size={18} />,
+  "Users & Roles": <UserCog size={18} />,
   Users: <UserCog size={18} />,
   Roles: <Shield size={18} />,
   Permissions: <KeyRound size={18} />,
   Branches: <Building2 size={18} />,
-  'Audit Logs': <ScrollText size={18} />,
+  "Audit Logs": <ScrollText size={18} />,
   Settings: <Settings size={18} />,
 };
 
-function isNavActive(pathname: string, href: string, activePaths?: string[]): boolean {
+function isNavActive(
+  pathname: string,
+  href: string,
+  activePaths?: string[],
+): boolean {
   if (activePaths?.length) {
     return activePaths.some(
       (p) => pathname === p || pathname.startsWith(`${p}/`),
     );
   }
   if (pathname === href) return true;
-  if (href === '/reports') {
-    return pathname.startsWith('/reports') && !pathname.startsWith('/reports/approval');
+  if (href === "/reports") {
+    return (
+      pathname.startsWith("/reports") &&
+      !pathname.startsWith("/reports/approval")
+    );
   }
   return pathname.startsWith(`${href}/`);
 }
@@ -94,7 +105,7 @@ export function LimsSidebar() {
         </Link>
       </div>
 
-      <nav className="flex-1 space-y-3 overflow-y-auto px-2 py-2.5">
+      <nav className="flex-1 space-y-3 overflow-y-auto no-scrollbar px-2 py-2.5">
         {LIMS_NAV.map((group) => {
           const items = group.items.filter((item) => {
             if (item.permissions?.length) {
@@ -103,7 +114,9 @@ export function LimsSidebar() {
             return !item.permission || can(item.permission);
           });
           if (!items.length) return null;
-          const showGroupTitle = !(items.length === 1 && items[0].label === group.title);
+          const showGroupTitle = !(
+            items.length === 1 && items[0].label === group.title
+          );
           return (
             <div key={group.title}>
               {showGroupTitle && (
@@ -114,13 +127,22 @@ export function LimsSidebar() {
               <ul className="space-y-0.5">
                 {items.map((item) => {
                   const href =
-                    item.label === 'Settings' ? getDefaultSettingsPath(can) : item.href;
-                  const active = isNavActive(pathname, item.href, item.activePaths);
+                    item.label === "Settings"
+                      ? getDefaultSettingsPath(can)
+                      : item.href;
+                  const active = isNavActive(
+                    pathname,
+                    item.href,
+                    item.activePaths,
+                  );
                   return (
                     <li key={`${group.title}-${item.href}`}>
                       <Link
                         href={href}
-                        className={cn('lims-nav-link', active && 'lims-nav-link-active')}
+                        className={cn(
+                          "lims-nav-link",
+                          active && "lims-nav-link-active",
+                        )}
                       >
                         {ICONS[item.label] ?? <Activity size={18} />}
                         <span className="truncate">{item.label}</span>
@@ -135,22 +157,26 @@ export function LimsSidebar() {
       </nav>
 
       <div className="border-t border-white/[0.06] p-2.5">
-        <p className="truncate px-2 text-xs font-medium text-white">{session?.name ?? 'User'}</p>
-        <p className="truncate px-2 text-[10px] text-slate-400">{session?.role ?? ''}</p>
+        <p className="truncate px-2 text-xs font-medium text-white">
+          {session?.name ?? "User"}
+        </p>
+        <p className="truncate px-2 text-[10px] text-slate-400">
+          {session?.role ?? ""}
+        </p>
         <button
           type="button"
           onClick={() => {
             if (session) {
               logAuditAction({
-                action: 'LOGOUT',
-                module: 'auth',
-                details: 'User signed out',
+                action: "LOGOUT",
+                module: "auth",
+                details: "User signed out",
                 userId: session.email,
                 userName: session.name,
               });
             }
             clearSession();
-            window.location.href = '/login';
+            window.location.href = "/login";
           }}
           className="lims-nav-link mt-2 w-full text-left text-red-300 hover:text-red-200"
         >

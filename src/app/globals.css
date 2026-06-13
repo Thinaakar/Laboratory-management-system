@@ -21,6 +21,25 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
+  /* Hide scrollbars everywhere — scroll still works via wheel / trackpad / touch */
+  html,
+  body,
+  *,
+  *::before,
+  *::after {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar,
+  *::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    background: transparent !important;
+  }
+
   h1,
   h2,
   h3,
@@ -174,11 +193,27 @@
 
   .lims-table-scroll {
     overflow-x: auto;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+
+  .lims-table-scroll::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
   }
 
   .lims-table-scroll-sticky {
     max-height: calc(100vh - 14rem);
     overflow-y: auto;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+
+  .lims-table-scroll-sticky::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
   }
 
   /* Legacy table wrappers inside cards */
@@ -186,6 +221,14 @@
     max-height: calc(100vh - 14rem);
     overflow-x: auto;
     overflow-y: auto;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+
+  .lims-card > .overflow-x-auto::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
   }
 
   .lims-card > .lims-table-toolbar + .overflow-x-auto {
@@ -343,6 +386,14 @@
 
   .lims-dialog-body {
     @apply min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-5 py-4;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+
+  .lims-dialog-body::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
   }
 
   .lims-dialog-footer {
@@ -357,7 +408,8 @@
   .patients-module h1,
   .patients-module h2,
   .patients-module h3 {
-    font-family: var(--font-plus-jakarta-sans), var(--font-inter), system-ui, sans-serif;
+    font-family:
+      var(--font-plus-jakarta-sans), var(--font-inter), system-ui, sans-serif;
   }
 
   .patient-hub {
@@ -365,12 +417,15 @@
   }
 
   .patient-hub-heading {
-    font-family: var(--font-plus-jakarta-sans), var(--font-inter), system-ui, sans-serif;
+    font-family:
+      var(--font-plus-jakarta-sans), var(--font-inter), system-ui, sans-serif;
   }
 
   .patient-hub-card {
     @apply rounded-[20px] border border-slate-200/70 bg-white;
-    box-shadow: 0 1px 2px 0 rgba(15, 23, 42, 0.04), 0 4px 16px -2px rgba(15, 23, 42, 0.06);
+    box-shadow:
+      0 1px 2px 0 rgba(15, 23, 42, 0.04),
+      0 4px 16px -2px rgba(15, 23, 42, 0.06);
   }
 
   .patient-hub-cta {
@@ -411,12 +466,14 @@
   }
 
   .no-scrollbar {
-    scrollbar-width: none;
-    -ms-overflow-style: none;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
   }
 
   .no-scrollbar::-webkit-scrollbar {
-    display: none;
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
   }
 
   .auth-premium-layout,

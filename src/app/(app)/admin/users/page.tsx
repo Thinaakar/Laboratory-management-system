@@ -3,14 +3,18 @@
 import { useEffect, useState } from 'react';
 import { Plus } from 'lucide-react';
 import { StatusBadge } from '@/components/lims/status-badge';
+import { UserDetailModal } from '@/components/lims/access/user-detail-modal';
 import { UserFormModal } from '@/components/lims/access/user-form-modal';
 import { UserManagementShell } from '@/components/lims/access/user-management-shell';
-import { addUser, getUsers } from '@/lib/data/users-store';
+import { TableRowActions } from '@/components/lims/table-row-actions';
+import { addUser, deleteUser, getUsers, updateUser } from '@/lib/data/users-store';
 import type { LimsUser } from '@/lib/types/lims';
 
 export default function UsersPage() {
   const [users, setUsers] = useState<LimsUser[]>([]);
-  const [showModal, setShowModal] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [viewUser, setViewUser] = useState<LimsUser | null>(null);
+  const [editUser, setEditUser] = useState<LimsUser | null>(null);
 
   const refresh = () => setUsers(getUsers());
 
@@ -18,10 +22,20 @@ export default function UsersPage() {
     refresh();
   }, []);
 
+  const handleDelete = (user: LimsUser) => {
+    if (!window.confirm(`Delete user "${user.displayName}"?`)) return;
+    try {
+      deleteUser(user.id);
+      refresh();
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : 'Could not delete user.');
+    }
+  };
+
   return (
     <UserManagementShell>
       <div className="mb-4 flex justify-end">
-        <button type="button" onClick={() => setShowModal(true)} className="lims-btn-primary">
+        <button type="button" onClick={() => setShowCreateModal(true)} className="lims-btn-primary">
           <Plus className="h-4 w-4" />
           New User
         </button>
@@ -36,6 +50,7 @@ export default function UsersPage() {
               <th>Role</th>
               <th>Branch</th>
               <th>Status</th>
+              <th className="w-28">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -51,22 +66,43 @@ export default function UsersPage() {
                     variant={u.status === 'Active' ? 'success' : 'neutral'}
                   />
                 </td>
+                <td>
+                  <TableRowActions
+                    onView={() => setViewUser(u)}
+                    onEdit={() => setEditUser(u)}
+                    onDelete={u.id === 'USR-ADMIN' ? undefined : () => handleDelete(u)}
+                  />
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
 
-      {showModal && (
+      {showCreateModal && (
         <UserFormModal
-          onClose={() => setShowModal(false)}
+          onClose={() => setShowCreateModal(false)}
           onSave={(data) => {
             addUser(data);
-            setShowModal(false);
+            setShowCreateModal(false);
             refresh();
           }}
         />
       )}
+
+      {editUser && (
+        <UserFormModal
+          user={editUser}
+          onClose={() => setEditUser(null)}
+          onSave={(data) => {
+            updateUser(editUser.id, data);
+            setEditUser(null);
+            refresh();
+          }}
+        />
+      )}
+
+      {viewUser && <UserDetailModal user={viewUser} onClose={() => setViewUser(null)} />}
     </UserManagementShell>
   );
 }

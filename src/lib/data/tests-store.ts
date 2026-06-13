@@ -1,10 +1,9 @@
 import type { LabTest } from '@/lib/types/lims';
 import { logAuditAction } from '@/lib/audit/log-action';
 import { getDepartments } from './departments-store';
+import { getActiveSampleTypes } from './sample-types-store';
 
 const STORAGE_KEY = 'labcore-tests-v1';
-
-export const SAMPLE_TYPE_OPTIONS = ['Blood', 'Urine', 'Swab', 'Other'] as const;
 
 export const seedTests: LabTest[] = [
   { id: 'TST-CBC', name: 'Complete Blood Count', departmentId: 'DEPT-HEM', departmentName: 'Hematology', price: 450, sampleType: 'Blood', turnaroundHours: 4, unit: 'cells/µL', referenceRange: '4.5–11.0', isActive: true },
@@ -58,13 +57,17 @@ export function addTest(input: {
   if (!department) {
     throw new Error('Selected department not found.');
   }
+  const sampleType = getActiveSampleTypes().find((s) => s.name === input.sampleType);
+  if (!sampleType) {
+    throw new Error('Selected sample type not found or inactive.');
+  }
   const created: LabTest = {
     id: `TST-${Date.now()}`,
     name: input.name.trim(),
     departmentId: input.departmentId,
     departmentName: department.name,
     price: input.price,
-    sampleType: input.sampleType,
+    sampleType: sampleType.name,
     turnaroundHours: input.turnaroundHours,
     unit: input.unit?.trim() || undefined,
     referenceRange: input.referenceRange?.trim() || undefined,

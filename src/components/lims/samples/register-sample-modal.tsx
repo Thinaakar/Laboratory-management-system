@@ -3,12 +3,15 @@
 import { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 import { ModalPortal } from '@/components/lims/modal-portal';
-import { getOrders, getSamples } from '@/lib/data/store';
-import { logAuditAction } from '@/lib/audit/log-action';
+import { getOrders } from '@/lib/data/store';
+import { addSample, getNextBarcode } from '@/lib/data/samples-store';
+import { getActiveSampleTypes } from '@/lib/data/sample-types-store';
+
+import type { Sample } from '@/lib/types/lims';
 
 interface RegisterSampleModalProps {
   onClose: () => void;
-  onSaved: () => void;
+  onSaved: (sample: Sample) => void;
 }
 
 function toDatetimeLocalValue(date: Date = new Date()): string {
@@ -16,28 +19,22 @@ function toDatetimeLocalValue(date: Date = new Date()): string {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
-function getNextBarcode(): string {
-  const samples = getSamples();
-  const max = samples.reduce((highest, sample) => {
-    const match = sample.barcode.match(/^BC2026(\d+)$/i);
-    const num = match ? parseInt(match[1], 10) : NaN;
-    return Number.isNaN(num) ? highest : Math.max(highest, num);
-  }, 0);
-  return `BC2026${String(max + 1).padStart(4, '0')}`;
-}
-
 export function RegisterSampleModal({ onClose, onSaved }: RegisterSampleModalProps) {
   const [ready, setReady] = useState(false);
   const [orders, setOrders] = useState<ReturnType<typeof getOrders>>([]);
+  const [sampleTypes, setSampleTypes] = useState<ReturnType<typeof getActiveSampleTypes>>([]);
   const [orderId, setOrderId] = useState('');
-  const [sampleType, setSampleType] = useState('Blood');
+  const [sampleType, setSampleType] = useState('');
   const [collectedAt, setCollectedAt] = useState('');
   const [barcode, setBarcode] = useState('');
 
   useEffect(() => {
     const list = getOrders();
+    const types = getActiveSampleTypes();
     setOrders(list);
+    setSampleTypes(types);
     setOrderId(list[0]?.id ?? '');
+    setSampleType(types[0]?.name ?? '');
     setCollectedAt(toDatetimeLocalValue());
     setBarcode(getNextBarcode());
     setReady(true);
@@ -46,12 +43,12 @@ export function RegisterSampleModal({ onClose, onSaved }: RegisterSampleModalPro
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!orderId || !collectedAt) return;
-    logAuditAction({
-      action: 'CREATE',
-      module: 'samples',
-      details: `Registered sample ${barcode} for order ${orderId}`,
-    });
-    onSaved();
+    try {
+      const saved = addSample({ orderId, sampleType, barcode, collectedAt });
+      onSaved(saved);
+    } catch {
+      window.alert('Could not register sample.');
+    }
   };
 
   return (
@@ -114,11 +111,17 @@ export function RegisterSampleModal({ onClose, onSaved }: RegisterSampleModalPro
                         required
                         value={sampleType}
                         onChange={(e) => setSampleType(e.target.value)}
+                        disabled={sampleTypes.length === 0}
                       >
-                        <option value="Blood">Blood</option>
-                        <option value="Urine">Urine</option>
-                        <option value="Swab">Swab</option>
-                        <option value="Other">Other</option>
+                        {sampleTypes.length === 0 ? (
+                          <option value="">No sample types configured</option>
+                        ) : (
+                          sampleTypes.map((type) => (
+                            <option key={type.id} value={type.name}>
+                              {type.name}
+                            </option>
+                          ))
+                        )}
                       </select>
                     </div>
 

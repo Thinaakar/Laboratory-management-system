@@ -1,10 +1,10 @@
 import type {
   DashboardKpis,
-  Sample,
   TestResult,
 } from '@/lib/types/lims';
 import { seedPatients } from './patients-store';
 import { seedOrders, seedInvoices } from './orders-store';
+import { getSamples, seedSamples } from './samples-store';
 
 const today = new Date().toISOString().slice(0, 10);
 
@@ -14,49 +14,6 @@ function dateOffset(daysAgo: number, hour = 10, minute = 0): string {
   const date = d.toISOString().slice(0, 10);
   return `${date}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00`;
 }
-
-/** Samples per day for the last 7 days (index 0 = oldest, 6 = today) */
-const TREND_DAY_COUNTS = [5, 7, 6, 10, 8, 11, 9];
-
-function buildSeedSamples(): Sample[] {
-  const statuses: Sample['status'][] = ['Registered', 'Collected', 'Received', 'Processing', 'Completed'];
-  const patients = seedPatients;
-  let seq = 1;
-  const samples: Sample[] = [];
-
-  TREND_DAY_COUNTS.forEach((count, dayIndex) => {
-    const daysAgo = 6 - dayIndex;
-    for (let i = 0; i < count; i++) {
-      const patient = patients[(seq - 1) % patients.length];
-      const status = daysAgo === 0
-        ? statuses[i % 4]
-        : daysAgo <= 1
-          ? 'Processing'
-          : 'Completed';
-      const createdAt = dateOffset(daysAgo, 8 + (i % 9), (i * 7) % 60);
-      const id = `SMP-2026-${String(seq).padStart(4, '0')}`;
-      samples.push({
-        id,
-        orderId: seq <= 2 ? `ORD-2026-000${seq}` : `ORD-2026-000${((seq - 1) % 5) + 1}`,
-        patientId: patient.id,
-        patientName: patient.name,
-        barcode: `BC2026${String(seq).padStart(4, '0')}`,
-        sampleType: i % 5 === 0 ? 'Urine' : 'Blood',
-        status,
-        collectedAt: status !== 'Registered' ? createdAt.replace(/T(\d+)/, (_, h) => `T${String(Number(h) + 1).padStart(2, '0')}`) : undefined,
-        receivedAt: ['Received', 'Processing', 'Completed'].includes(status)
-          ? dateOffset(daysAgo, 9 + (i % 8), 15)
-          : undefined,
-        createdAt,
-      });
-      seq += 1;
-    }
-  });
-
-  return samples;
-}
-
-export const seedSamples: Sample[] = buildSeedSamples();
 
 export const seedResults: TestResult[] = [
   {
@@ -214,7 +171,7 @@ export function getDashboardKpis(): DashboardKpis {
   return {
     totalPatients: seedPatients.length,
     todayRegistrations: seedPatients.filter((p) => p.createdAt.startsWith(today)).length,
-    todaySamples: seedSamples.filter((s) => s.createdAt.startsWith(today)).length,
+    todaySamples: getSamples().filter((s) => s.createdAt.startsWith(today)).length,
     pendingTests: seedResults.filter((r) => r.approvalStatus === 'Pending').length,
     completedReports: seedResults.filter((r) => r.approvalStatus === 'Approved').length,
     revenueToday: seedInvoices.filter((i) => i.createdAt.startsWith(today)).reduce((s, i) => s + i.paidAmount, 0),
@@ -272,7 +229,7 @@ export function getSampleTrend(): SampleTrendDay[] {
     const d = new Date();
     d.setDate(d.getDate() - i);
     const key = d.toISOString().slice(0, 10);
-    const count = seedSamples.filter((s) => s.createdAt.startsWith(key)).length;
+    const count = getSamples().filter((s) => s.createdAt.startsWith(key)).length;
     const label = WEEKDAY_LABELS[d.getDay()];
     days.push({ label, count, heightPct: 0 });
   }
@@ -288,7 +245,14 @@ export function getSampleTrendBars(): number[] {
   return getSampleTrend().map((d) => d.heightPct);
 }
 
-export function getSamples() { return seedSamples; }
+export {
+  getSamples,
+  seedSamples,
+  addSample,
+  updateSample,
+  deleteSample,
+  getNextBarcode,
+} from './samples-store';
 export function getResults() { return seedResults; }
 
 export {
@@ -303,10 +267,17 @@ export {
   addDepartment,
 } from './departments-store';
 export {
+  seedSampleTypes,
+  getSampleTypes,
+  getActiveSampleTypes,
+  addSampleType,
+  updateSampleType,
+  deleteSampleType,
+} from './sample-types-store';
+export {
   seedTests,
   getTests,
   addTest,
-  SAMPLE_TYPE_OPTIONS,
 } from './tests-store';
 export {
   seedPackages,

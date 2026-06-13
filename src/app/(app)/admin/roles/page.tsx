@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { UserManagementShell } from '@/components/lims/access/user-management-shell';
+import { RoleDetailModal } from '@/components/lims/access/role-detail-modal';
 import { RoleFormModal } from '@/components/lims/access/role-form-modal';
 import { RolesTable } from '@/components/lims/access/roles-table';
 import {
@@ -17,6 +18,7 @@ import { getUsers } from '@/lib/data/store';
 export default function AdminRolesPage() {
   const [roles, setRoles] = useState<LimsRole[]>([]);
   const [modal, setModal] = useState<{ mode: 'create' | 'edit'; role?: LimsRole } | null>(null);
+  const [viewRole, setViewRole] = useState<LimsRole | null>(null);
   const users = getUsers();
 
   const refresh = () => setRoles(getRoles());
@@ -33,6 +35,7 @@ export default function AdminRolesPage() {
         roles={roles}
         getUserCountByRole={countByRole}
         onCreate={() => setModal({ mode: 'create' })}
+        onView={(role) => setViewRole(role)}
         onEdit={(role) => setModal({ mode: 'edit', role })}
         onDelete={(role) => {
           if (countByRole(role.name) > 0) {
@@ -73,6 +76,14 @@ export default function AdminRolesPage() {
             setModal(null);
             refresh();
           }}
+        />
+      )}
+
+      {viewRole && (
+        <RoleDetailModal
+          role={viewRole}
+          userCount={countByRole(viewRole.name)}
+          onClose={() => setViewRole(null)}
         />
       )}
     </UserManagementShell>

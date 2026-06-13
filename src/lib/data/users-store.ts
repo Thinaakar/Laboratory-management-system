@@ -71,6 +71,60 @@ export function addUser(input: {
   return created;
 }
 
+export function updateUser(
+  id: string,
+  input: {
+    displayName: string;
+    email: string;
+    role: UserRole;
+    branchId?: string;
+    status: LimsUser['status'];
+  },
+): LimsUser {
+  const users = getUsers();
+  const index = users.findIndex((u) => u.id === id);
+  if (index === -1) throw new Error('User not found.');
+
+  const email = input.email.trim().toLowerCase();
+  if (users.some((u) => u.id !== id && u.email.toLowerCase() === email)) {
+    throw new Error('A user with this email already exists.');
+  }
+
+  const updated: LimsUser = {
+    ...users[index],
+    displayName: input.displayName.trim(),
+    email: input.email.trim(),
+    role: input.role,
+    branchId: input.branchId,
+    status: input.status,
+  };
+
+  memoryUsers = users.map((u) => (u.id === id ? updated : u));
+  saveUsers(memoryUsers);
+  logAuditAction({
+    action: 'UPDATE',
+    module: 'users',
+    details: `Updated user ${updated.displayName} (${updated.email})`,
+  });
+  return updated;
+}
+
+export function deleteUser(id: string): void {
+  if (id === 'USR-ADMIN') {
+    throw new Error('Cannot delete the system admin account.');
+  }
+  const users = getUsers();
+  const user = users.find((u) => u.id === id);
+  if (!user) throw new Error('User not found.');
+  memoryUsers = users.filter((u) => u.id !== id);
+  saveUsers(memoryUsers);
+  logAuditAction({
+    action: 'DELETE',
+    module: 'users',
+    details: `Deleted user ${user.displayName} (${user.email})`,
+  });
+}
+
 export const USER_ROLE_OPTIONS: UserRole[] = [
   'Admin',
   'Receptionist',

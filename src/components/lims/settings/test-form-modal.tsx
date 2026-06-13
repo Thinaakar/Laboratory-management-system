@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { getDepartments } from '@/lib/data/departments-store';
-import { SAMPLE_TYPE_OPTIONS } from '@/lib/data/tests-store';
+import { getActiveSampleTypes } from '@/lib/data/sample-types-store';
 
 interface TestFormModalProps {
   onClose: () => void;
@@ -20,9 +20,10 @@ interface TestFormModalProps {
 
 export function TestFormModal({ onClose, onSave }: TestFormModalProps) {
   const departments = getDepartments();
+  const sampleTypes = getActiveSampleTypes();
   const [name, setName] = useState('');
   const [departmentId, setDepartmentId] = useState(departments[0]?.id ?? '');
-  const [sampleType, setSampleType] = useState<string>(SAMPLE_TYPE_OPTIONS[0]);
+  const [sampleType, setSampleType] = useState(sampleTypes[0]?.name ?? '');
   const [price, setPrice] = useState('');
   const [turnaroundHours, setTurnaroundHours] = useState('4');
   const [unit, setUnit] = useState('');
@@ -43,6 +44,10 @@ export function TestFormModal({ onClose, onSave }: TestFormModalProps) {
             setError('');
             if (!departments.length) {
               setError('Create a department before adding tests.');
+              return;
+            }
+            if (!sampleTypes.length) {
+              setError('Create a sample type before adding tests.');
               return;
             }
             try {
@@ -100,10 +105,11 @@ export function TestFormModal({ onClose, onSave }: TestFormModalProps) {
                 className="lims-input"
                 value={sampleType}
                 onChange={(e) => setSampleType(e.target.value)}
+                required
               >
-                {SAMPLE_TYPE_OPTIONS.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
+                {sampleTypes.map((s) => (
+                  <option key={s.id} value={s.name}>
+                    {s.name}
                   </option>
                 ))}
               </select>

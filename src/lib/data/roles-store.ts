@@ -15,6 +15,13 @@ export interface LimsRole {
 
 const STORAGE_KEY = 'labcore-roles-v1';
 
+/** Built-in super admin role — cannot be deleted. */
+export const SUPER_ADMIN_ROLE_ID = 'role-admin';
+
+export function isSuperAdminRole(role: Pick<LimsRole, 'id' | 'name'>): boolean {
+  return role.id === SUPER_ADMIN_ROLE_ID || role.name === 'Admin';
+}
+
 const SEED_ROLES: LimsRole[] = [
   {
     id: 'role-admin',
@@ -141,7 +148,7 @@ export function updateRole(roleId: string, patch: Partial<Omit<LimsRole, 'id'>>)
 export function deleteRole(roleId: string): boolean {
   const roles = getRoles();
   const role = roles.find((r) => r.id === roleId);
-  if (!role || role.isSystem) return false;
+  if (!role || isSuperAdminRole(role)) return false;
   memoryRoles = roles.filter((r) => r.id !== roleId);
   saveRoles(memoryRoles);
   return true;

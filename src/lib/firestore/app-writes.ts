@@ -39,11 +39,15 @@ export async function seedDocument(table: string, id: string, data: Record<strin
 
 export async function createPatient(input: z.infer<typeof patientCreateSchema>): Promise<Patient> {
   const id = await nextPatientId();
+  const name = input.name.trim();
+  const [firstName, ...rest] = name.split(/\s+/);
   const patient: Patient = {
     id,
-    name: input.name.trim(),
+    firstName: firstName || name,
+    lastName: rest.length ? rest.join(' ') : undefined,
+    name,
     phone: input.phone.trim(),
-    email: input.email?.trim(),
+    bloodGroup: input.bloodGroup,
     dateOfBirth: input.dateOfBirth,
     gender: input.gender,
     address: input.address?.trim(),

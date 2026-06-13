@@ -208,3 +208,16 @@ export function addInvoice(input: {
   });
   return created;
 }
+
+export function deleteInvoice(id: string): void {
+  const invoices = getInvoices();
+  const invoice = invoices.find((i) => i.id === id);
+  if (!invoice) throw new Error('Invoice not found.');
+  memoryInvoices = invoices.filter((i) => i.id !== id);
+  saveInvoices(memoryInvoices);
+  logAuditAction({
+    action: 'DELETE',
+    module: 'billing',
+    details: `Deleted invoice ${invoice.id} for ${invoice.patientName}`,
+  });
+}

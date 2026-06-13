@@ -14,6 +14,7 @@ const MASTER_DATA_TABS = [
   { label: 'Tests', href: '/settings/tests' },
   { label: 'Packages', href: '/settings/packages' },
   { label: 'Departments', href: '/settings/departments' },
+  { label: 'Sample Types', href: '/settings/sample-types' },
   { label: 'Doctors', href: '/settings/doctors' },
   { label: 'Branches', href: '/settings/branches' },
 ];

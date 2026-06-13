@@ -49,7 +49,7 @@ export const appTemplate = {
       fields: [
         { key: 'name', label: 'Name', type: 'string', required: true },
         { key: 'phone', label: 'Phone', type: 'string', required: true },
-        { key: 'email', label: 'Email', type: 'string' },
+        { key: 'bloodGroup', label: 'Blood Group', type: 'string' },
         { key: 'dateOfBirth', label: 'DOB', type: 'string', required: true },
         { key: 'gender', label: 'Gender', type: 'string', required: true },
         { key: 'branchId', label: 'Branch', type: 'reference', refTable: 'branches' },

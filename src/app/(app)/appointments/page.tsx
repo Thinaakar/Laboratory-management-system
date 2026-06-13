@@ -3,15 +3,19 @@
 import { ArrowLeft, CalendarPlus, ClipboardList } from 'lucide-react';
 import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ModuleActionHub } from '@/components/lims/module-action-hub';
+import { AppointmentDetailModal } from '@/components/lims/appointments/appointment-detail-modal';
+import { EditAppointmentModal } from '@/components/lims/appointments/edit-appointment-modal';
+import { ScheduleBookingModal } from '@/components/lims/appointments/schedule-booking-modal';
+import { DataTable } from '@/components/lims/data-table';
+import { ModuleHub } from '@/components/lims/module-hub';
 import { PageHeader } from '@/components/lims/page-header';
 import { FlashBanner } from '@/components/lims/flash-banner';
-import { ScheduleBookingModal } from '@/components/lims/appointments/schedule-booking-modal';
 import { StatusBadge, statusVariant } from '@/components/lims/status-badge';
-import { HydrationSafeInput } from '@/components/lims/client-only';
-import { getAppointments } from '@/lib/data/appointments-store';
+import { TableRowActions } from '@/components/lims/table-row-actions';
+import { defaultStringSort, useDataTable } from '@/hooks/use-data-table';
+import { deleteAppointment, getAppointments } from '@/lib/data/appointments-store';
 import type { Appointment } from '@/lib/types/lims';
-import { formatCurrency, formatDateTime } from '@/lib/utils';
+import { formatDateTime } from '@/lib/utils';
 
 type AppointmentsView = 'hub' | 'list';
 
@@ -22,10 +26,11 @@ function AppointmentsContent() {
   const [bookings, setBookings] = useState<Appointment[]>([]);
   const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
+  const [viewAppointment, setViewAppointment] = useState<Appointment | null>(null);
+  const [editAppointment, setEditAppointment] = useState<Appointment | null>(null);
+  const [successMessage, setSuccessMessage] = useState('');
 
-  const refresh = useCallback(() => {
-    setBookings(getAppointments());
-  }, []);
+  const refresh = useCallback(() => setBookings(getAppointments()), []);
 
   useEffect(() => {
     refresh();
@@ -38,44 +43,102 @@ function AppointmentsContent() {
     }
   }, [searchParams]);
 
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return bookings;
-    return bookings.filter(
-      (b) =>
-        b.patientName.toLowerCase().includes(q) ||
-        b.patientId.toLowerCase().includes(q) ||
-        b.id.toLowerCase().includes(q) ||
-        b.orderId?.toLowerCase().includes(q) ||
-        b.testNames?.some((t) => t.toLowerCase().includes(q)),
+  const handleDelete = useCallback(
+    (b: Appointment) => {
+      if (!window.confirm(`Delete appointment ${b.id} for ${b.patientName}? This cannot be undone.`)) return;
+      try {
+        deleteAppointment(b.id);
+        refresh();
+        setSuccessMessage(`Appointment ${b.id} deleted.`);
+      } catch {
+        window.alert('Could not delete appointment.');
+      }
+    },
+    [refresh],
+  );
+
+  const rowActions = useCallback(
+    (b: Appointment) => (
+      <TableRowActions
+        onView={() => setViewAppointment(b)}
+        onEdit={() => setEditAppointment(b)}
+        onDelete={() => handleDelete(b)}
+        viewLabel={`View appointment ${b.id}`}
+        editLabel={`Edit appointment ${b.id}`}
+        deleteLabel={`Delete appointment ${b.id}`}
+      />
+    ),
+    [handleDelete],
+  );
+
+  const searchFilter = useCallback((b: Appointment, q: string) => {
+    return (
+      b.patientName.toLowerCase().includes(q) ||
+      b.patientId.toLowerCase().includes(q) ||
+      b.id.toLowerCase().includes(q) ||
+      b.orderId?.toLowerCase().includes(q) ||
+      b.testNames?.some((t) => t.toLowerCase().includes(q)) ||
+      b.status.toLowerCase().includes(q)
     );
-  }, [bookings, search]);
+  }, []);
+
+  const sortFn = useCallback((a: Appointment, b: Appointment, key: string, dir: 'asc' | 'desc') => {
+    const accessor = (apt: Appointment, k: string) => {
+      switch (k) {
+        case 'patient':
+          return apt.patientName;
+        case 'scheduled':
+          return apt.scheduledAt;
+        case 'type':
+          return apt.type;
+        case 'status':
+          return apt.status;
+        default:
+          return '';
+      }
+    };
+    return defaultStringSort(a, b, key, dir, accessor);
+  }, []);
+
+  const table = useDataTable({ data: bookings, searchQuery: search, searchFilter, sortFn, pageSize: 10 });
+
+  const columns = useMemo(
+    () => [
+      { key: 'patient', header: 'Patient', sortable: true, className: 'font-medium text-slate-900', render: (b: Appointment) => b.patientName },
+      { key: 'scheduled', header: 'Scheduled', sortable: true, className: 'text-slate-600', render: (b: Appointment) => formatDateTime(b.scheduledAt) },
+      { key: 'type', header: 'Type', sortable: true, render: (b: Appointment) => b.type },
+      {
+        key: 'status',
+        header: 'Status',
+        sortable: true,
+        render: (b: Appointment) => <StatusBadge label={b.status} variant={statusVariant(b.status)} />,
+      },
+      { key: 'actions', header: '', className: 'w-28', render: rowActions },
+    ],
+    [rowActions],
+  );
 
   return (
-    <>
-      <PageHeader
-        title="Appointments"
-        description="Patient visit scheduling and lab order bookings"
-        action={
-          view !== 'hub' ? (
-            <button type="button" onClick={() => setView('hub')} className="lims-btn-secondary">
-              <ArrowLeft className="h-4 w-4" />
-              Back
-            </button>
-          ) : undefined
-        }
-      />
-
+    <div className="patients-module">
       <FlashBanner />
+      {successMessage && (
+        <div className="mb-4 rounded-[20px] border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm text-emerald-800">
+          {successMessage}
+        </div>
+      )}
 
       {view === 'hub' && (
-        <ModuleActionHub
+        <ModuleHub
+          eyebrow="Scheduling"
+          title="Appointments"
+          description="Schedule patient visits, book lab orders, and manage upcoming appointments."
           actions={[
             {
               id: 'schedule',
               label: 'Schedule Appointment',
               description: 'Book a patient visit, select tests, and create a lab order.',
               icon: CalendarPlus,
+              ctaLabel: 'Schedule Appointment',
               onSelect: () => setShowModal(true),
             },
             {
@@ -83,75 +146,63 @@ function AppointmentsContent() {
               label: 'Appointment List',
               description: 'View scheduled bookings, priorities, and order details.',
               icon: ClipboardList,
+              ctaLabel: 'View Appointments',
+              variant: 'secondary',
               onSelect: () => setView('list'),
+            },
+          ]}
+          activityTitle="Recent Appointments"
+          activitySubtitle="Latest scheduled bookings in your laboratory"
+          activityEmptyMessage="No bookings found. Schedule an appointment to get started."
+          items={bookings}
+          rowKey={(b) => b.id}
+          sortDate={(b) => b.scheduledAt}
+          onViewAll={() => setView('list')}
+          renderRowActions={rowActions}
+          columns={[
+            { key: 'patient', header: 'Patient', className: 'font-medium text-slate-900', render: (b) => b.patientName },
+            { key: 'scheduled', header: 'Scheduled', className: 'text-slate-600', render: (b) => formatDateTime(b.scheduledAt) },
+            { key: 'type', header: 'Type', className: 'text-slate-600', render: (b) => b.type },
+            {
+              key: 'status',
+              header: 'Status',
+              render: (b) => <StatusBadge label={b.status} variant={statusVariant(b.status)} />,
             },
           ]}
         />
       )}
 
       {view === 'list' && (
-        <div className="lims-card overflow-hidden">
-          <div className="border-b border-muted-border bg-muted-bg/40 px-5 py-4">
-            <HydrationSafeInput
-              type="search"
-              className="lims-input max-w-sm bg-white"
-              placeholder="Search by patient, booking ID, order, or test…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="lims-table">
-              <thead>
-                <tr>
-                  <th>Booking ID</th>
-                  <th>Patient</th>
-                  <th>Patient ID</th>
-                  <th>Scheduled</th>
-                  <th>Type</th>
-                  <th>Referring Doctor</th>
-                  <th>Priority</th>
-                  <th>Package</th>
-                  <th>Tests</th>
-                  <th>Amount</th>
-                  <th>Order ID</th>
-                  <th>Notes</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.length === 0 ? (
-                  <tr>
-                    <td colSpan={13} className="py-10 text-center text-sm text-muted">
-                      No bookings found. Schedule an appointment to get started.
-                    </td>
-                  </tr>
-                ) : (
-                  filtered.map((b) => (
-                    <tr key={b.id}>
-                      <td className="font-mono text-xs">{b.id}</td>
-                      <td className="font-medium text-slate-900">{b.patientName}</td>
-                      <td className="font-mono text-xs">{b.patientId}</td>
-                      <td>{formatDateTime(b.scheduledAt)}</td>
-                      <td>{b.type}</td>
-                      <td>{b.referringDoctor ?? 'None'}</td>
-                      <td>{b.priority ?? 'Normal'}</td>
-                      <td>{b.healthPackageName ?? '—'}</td>
-                      <td className="max-w-xs truncate">{b.testNames?.join(', ') ?? '—'}</td>
-                      <td>{b.orderTotal != null ? formatCurrency(b.orderTotal) : '—'}</td>
-                      <td className="font-mono text-xs">{b.orderId ?? '—'}</td>
-                      <td className="max-w-[10rem] truncate">{b.notes ?? '—'}</td>
-                      <td>
-                        <StatusBadge label={b.status} variant={statusVariant(b.status)} />
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <>
+          <PageHeader
+            title="Appointment List"
+            description="Browse appointments — use icons to view, edit, or delete"
+            action={
+              <button type="button" onClick={() => setView('hub')} className="lims-btn-secondary">
+                <ArrowLeft className="h-4 w-4" />
+                Back
+              </button>
+            }
+          />
+          <DataTable
+            columns={columns}
+            data={table.rows}
+            rowKey={(b) => b.id}
+            emptyMessage={bookings.length === 0 ? 'No bookings found.' : 'No bookings match your search.'}
+            search={{ value: search, onChange: setSearch, placeholder: 'Search by patient, booking ID, order, or test…' }}
+            sortKey={table.sortKey}
+            sortDir={table.sortDir}
+            onSort={table.toggleSort}
+            pagination={{
+              page: table.page,
+              pageSize: table.pageSize,
+              totalItems: table.totalItems,
+              totalPages: table.totalPages,
+              onPageChange: table.setPage,
+              onPageSizeChange: table.setPageSize,
+            }}
+          />
+        </>
       )}
 
       {showModal && (
@@ -164,7 +215,21 @@ function AppointmentsContent() {
           }}
         />
       )}
-    </>
+      {viewAppointment && (
+        <AppointmentDetailModal appointment={viewAppointment} onClose={() => setViewAppointment(null)} />
+      )}
+      {editAppointment && (
+        <EditAppointmentModal
+          appointment={editAppointment}
+          onClose={() => setEditAppointment(null)}
+          onSaved={(updated) => {
+            refresh();
+            setEditAppointment(null);
+            setSuccessMessage(`Appointment ${updated.id} updated successfully.`);
+          }}
+        />
+      )}
+    </div>
   );
 }
 

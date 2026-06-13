@@ -4,41 +4,72 @@ import { ArrowLeft, ClipboardList, TestTube2 } from 'lucide-react';
 import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { DataTable } from '@/components/lims/data-table';
-import { ModuleActionHub } from '@/components/lims/module-action-hub';
 import { PageHeader } from '@/components/lims/page-header';
 import { FlashBanner } from '@/components/lims/flash-banner';
+import { ModuleHub } from '@/components/lims/module-hub';
+import { EditSampleModal } from '@/components/lims/samples/edit-sample-modal';
 import { RegisterSampleModal } from '@/components/lims/samples/register-sample-modal';
+import { SampleDetailModal } from '@/components/lims/samples/sample-detail-modal';
 import { StatusBadge, statusVariant } from '@/components/lims/status-badge';
+import { TableRowActions } from '@/components/lims/table-row-actions';
 import { defaultStringSort, useDataTable } from '@/hooks/use-data-table';
-import { getSamples } from '@/lib/data/store';
+import { deleteSample, getSamples } from '@/lib/data/samples-store';
 import type { Sample } from '@/lib/types/lims';
 import { formatDateTime } from '@/lib/utils';
 
-type SamplesView = 'hub' | 'list';
+type SamplesView = 'hub' | 'directory';
 
 function SamplesContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [view, setView] = useState<SamplesView>('hub');
-  const [showModal, setShowModal] = useState(false);
   const [samples, setSamples] = useState<Sample[]>([]);
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [view, setView] = useState<SamplesView>('hub');
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const [viewSample, setViewSample] = useState<Sample | null>(null);
+  const [editSample, setEditSample] = useState<Sample | null>(null);
+  const [successMessage, setSuccessMessage] = useState('');
+
+  const refresh = useCallback(() => setSamples(getSamples()), []);
 
   useEffect(() => {
-    setSamples(getSamples());
-  }, []);
+    refresh();
+  }, [refresh]);
 
   useEffect(() => {
     if (searchParams.get('register') === '1') {
-      setShowModal(true);
+      setShowRegisterModal(true);
       window.history.replaceState(null, '', '/samples');
     }
   }, [searchParams]);
 
-  const filteredData = useMemo(() => {
-    return samples.filter((s) => statusFilter === 'all' || s.status === statusFilter);
-  }, [samples, statusFilter]);
+  const handleDelete = useCallback(
+    (s: Sample) => {
+      if (!window.confirm(`Delete sample ${s.barcode} (${s.id})? This cannot be undone.`)) return;
+      try {
+        deleteSample(s.id);
+        refresh();
+        setSuccessMessage(`Sample ${s.id} deleted.`);
+      } catch {
+        window.alert('Could not delete sample.');
+      }
+    },
+    [refresh],
+  );
+
+  const rowActions = useCallback(
+    (s: Sample) => (
+      <TableRowActions
+        onView={() => setViewSample(s)}
+        onEdit={() => setEditSample(s)}
+        onDelete={() => handleDelete(s)}
+        viewLabel={`View sample ${s.barcode}`}
+        editLabel={`Edit sample ${s.barcode}`}
+        deleteLabel={`Delete sample ${s.barcode}`}
+      />
+    ),
+    [handleDelete],
+  );
 
   const searchFilter = useCallback((s: Sample, q: string) => {
     return (
@@ -60,16 +91,10 @@ function SamplesContent() {
           return s.barcode;
         case 'patient':
           return s.patientName;
-        case 'order':
-          return s.orderId;
         case 'type':
           return s.sampleType;
         case 'status':
           return s.status;
-        case 'collected':
-          return s.collectedAt ?? '';
-        case 'received':
-          return s.receivedAt ?? '';
         default:
           return '';
       }
@@ -77,13 +102,7 @@ function SamplesContent() {
     return defaultStringSort(a, b, key, dir, accessor);
   }, []);
 
-  const table = useDataTable({
-    data: filteredData,
-    searchQuery: search,
-    searchFilter,
-    sortFn,
-    pageSize: 10,
-  });
+  const table = useDataTable({ data: samples, searchQuery: search, searchFilter, sortFn, pageSize: 10 });
 
   const columns = useMemo(
     () => [
@@ -109,13 +128,6 @@ function SamplesContent() {
         render: (s: Sample) => s.patientName,
       },
       {
-        key: 'order',
-        header: 'Order',
-        sortable: true,
-        className: 'font-mono text-xs text-slate-600',
-        render: (s: Sample) => s.orderId,
-      },
-      {
         key: 'type',
         header: 'Type',
         sortable: true,
@@ -127,116 +139,150 @@ function SamplesContent() {
         sortable: true,
         render: (s: Sample) => <StatusBadge label={s.status} variant={statusVariant(s.status)} />,
       },
-      {
-        key: 'collected',
-        header: 'Collected',
-        sortable: true,
-        render: (s: Sample) => (s.collectedAt ? formatDateTime(s.collectedAt) : '—'),
-      },
-      {
-        key: 'received',
-        header: 'Received',
-        sortable: true,
-        render: (s: Sample) => (s.receivedAt ? formatDateTime(s.receivedAt) : '—'),
-      },
+      { key: 'actions', header: '', className: 'w-28', render: rowActions },
     ],
-    [],
+    [rowActions],
   );
 
-  const statusOptions = useMemo(() => {
-    return [...new Set(samples.map((s) => s.status))].sort();
-  }, [samples]);
-
   return (
-    <>
-      <PageHeader
-        title="Samples"
-        description="Sample registration and tracking"
-        action={
-          view !== 'hub' ? (
-            <button type="button" onClick={() => setView('hub')} className="lims-btn-secondary">
-              <ArrowLeft className="h-4 w-4" />
-              Back
-            </button>
-          ) : undefined
-        }
-      />
-
+    <div className="patients-module">
       <FlashBanner />
+      {successMessage && (
+        <div className="mb-4 rounded-[20px] border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm text-emerald-800">
+          {successMessage}
+        </div>
+      )}
 
       {view === 'hub' && (
-        <ModuleActionHub
+        <ModuleHub
+          eyebrow="Sample Management"
+          title="Samples"
+          description="Register and track laboratory samples. Collect new specimens or browse the full sample directory."
           actions={[
             {
               id: 'register',
               label: 'Register Sample',
-              description: 'Collect and register a new sample with barcode tracking for lab processing.',
+              description:
+                'Collect and register a new sample with barcode tracking for lab processing.',
               icon: TestTube2,
-              onSelect: () => setShowModal(true),
+              ctaLabel: 'Register Sample',
+              onSelect: () => setShowRegisterModal(true),
             },
             {
-              id: 'list',
-              label: 'Sample List',
-              description: 'View all registered samples, statuses, and collection timestamps.',
+              id: 'directory',
+              label: 'Sample Directory',
+              description: 'Browse, search, and review all registered samples and their statuses.',
               icon: ClipboardList,
-              onSelect: () => setView('list'),
+              ctaLabel: 'View Directory',
+              variant: 'secondary',
+              onSelect: () => setView('directory'),
+            },
+          ]}
+          activityTitle="Recent Sample Activity"
+          activitySubtitle="Latest samples registered in your laboratory"
+          activityEmptyMessage="No samples registered yet. Register your first sample to get started."
+          items={samples}
+          rowKey={(s) => s.id}
+          sortDate={(s) => s.createdAt}
+          onViewAll={() => setView('directory')}
+          renderRowActions={rowActions}
+          columns={[
+            {
+              key: 'patient',
+              header: 'Patient',
+              className: 'font-medium text-slate-900',
+              render: (s) => s.patientName,
+            },
+            {
+              key: 'barcode',
+              header: 'Barcode',
+              className: 'font-mono text-xs font-semibold text-slate-900',
+              render: (s) => s.barcode,
+            },
+            {
+              key: 'type',
+              header: 'Type',
+              render: (s) => s.sampleType,
+            },
+            {
+              key: 'status',
+              header: 'Status',
+              render: (s) => <StatusBadge label={s.status} variant={statusVariant(s.status)} />,
+            },
+            {
+              key: 'collected',
+              header: 'Collected',
+              className: 'text-slate-600',
+              render: (s) => (s.collectedAt ? formatDateTime(s.collectedAt) : '—'),
             },
           ]}
         />
       )}
 
-      {view === 'list' && (
-        <DataTable
-          columns={columns}
-          data={table.rows}
-          rowKey={(s) => s.id}
-          emptyMessage={
-            samples.length === 0 ? 'No samples registered yet.' : 'No samples match your filters.'
-          }
-          search={{
-            value: search,
-            onChange: setSearch,
-            placeholder: 'Search by ID, barcode, patient, or order…',
-          }}
-          filters={
-            <select
-              className="lims-input h-9 w-auto min-w-[8rem] text-xs"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-            >
-              <option value="all">All statuses</option>
-              {statusOptions.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
-          }
-          sortKey={table.sortKey}
-          sortDir={table.sortDir}
-          onSort={table.toggleSort}
-          pagination={{
-            page: table.page,
-            pageSize: table.pageSize,
-            totalItems: table.totalItems,
-            totalPages: table.totalPages,
-            onPageChange: table.setPage,
-            onPageSizeChange: table.setPageSize,
-          }}
-        />
+      {view === 'directory' && (
+        <>
+          <PageHeader
+            title="Sample Directory"
+            description="Browse samples — use icons to view, edit, or delete"
+            action={
+              <button type="button" onClick={() => setView('hub')} className="lims-btn-secondary">
+                <ArrowLeft className="h-4 w-4" />
+                Back
+              </button>
+            }
+          />
+          <DataTable
+            columns={columns}
+            data={table.rows}
+            rowKey={(s) => s.id}
+            emptyMessage={samples.length === 0 ? 'No samples found.' : 'No samples match your search.'}
+            search={{
+              value: search,
+              onChange: setSearch,
+              placeholder: 'Search by ID, barcode, patient, or order…',
+            }}
+            sortKey={table.sortKey}
+            sortDir={table.sortDir}
+            onSort={table.toggleSort}
+            pagination={{
+              page: table.page,
+              pageSize: table.pageSize,
+              totalItems: table.totalItems,
+              totalPages: table.totalPages,
+              onPageChange: table.setPage,
+              onPageSizeChange: table.setPageSize,
+            }}
+          />
+        </>
       )}
 
-      {showModal && (
+      {showRegisterModal && (
         <RegisterSampleModal
-          onClose={() => setShowModal(false)}
-          onSaved={() => {
-            setShowModal(false);
-            setSamples(getSamples());
+          onClose={() => setShowRegisterModal(false)}
+          onSaved={(sample) => {
+            refresh();
+            setShowRegisterModal(false);
+            setView('directory');
+            setSuccessMessage(`Sample ${sample.barcode} registered successfully.`);
             router.push('/results?filter=pending&success=sample');
           }}
         />
       )}
-    </>
+
+      {editSample && (
+        <EditSampleModal
+          sample={editSample}
+          onClose={() => setEditSample(null)}
+          onSaved={(sample) => {
+            refresh();
+            setEditSample(null);
+            setSuccessMessage(`Sample ${sample.barcode} updated successfully.`);
+          }}
+        />
+      )}
+
+      {viewSample && <SampleDetailModal sample={viewSample} onClose={() => setViewSample(null)} />}
+    </div>
   );
 }
 

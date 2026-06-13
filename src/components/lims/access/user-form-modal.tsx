@@ -6,6 +6,7 @@ import { getBranches } from '@/lib/data/store';
 import { USER_ROLE_OPTIONS } from '@/lib/data/users-store';
 
 interface UserFormModalProps {
+  user?: LimsUser;
   onClose: () => void;
   onSave: (data: {
     displayName: string;
@@ -16,20 +17,23 @@ interface UserFormModalProps {
   }) => void;
 }
 
-export function UserFormModal({ onClose, onSave }: UserFormModalProps) {
+export function UserFormModal({ user, onClose, onSave }: UserFormModalProps) {
   const branches = getBranches();
-  const [displayName, setDisplayName] = useState('');
-  const [email, setEmail] = useState('');
-  const [role, setRole] = useState<UserRole>('Receptionist');
-  const [branchId, setBranchId] = useState(branches[0]?.id ?? '');
-  const [status, setStatus] = useState<LimsUser['status']>('Active');
+  const isEdit = Boolean(user);
+  const [displayName, setDisplayName] = useState(user?.displayName ?? '');
+  const [email, setEmail] = useState(user?.email ?? '');
+  const [role, setRole] = useState<UserRole>(user?.role ?? 'Receptionist');
+  const [branchId, setBranchId] = useState(user?.branchId ?? branches[0]?.id ?? '');
+  const [status, setStatus] = useState<LimsUser['status']>(user?.status ?? 'Active');
   const [error, setError] = useState('');
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
       <div className="lims-surface w-full max-w-md p-6">
-        <h3 className="text-lg font-semibold text-slate-900">New User</h3>
-        <p className="mt-1 text-sm text-muted">Create a staff account and assign a role.</p>
+        <h3 className="text-lg font-semibold text-slate-900">{isEdit ? 'Edit User' : 'New User'}</h3>
+        <p className="mt-1 text-sm text-muted">
+          {isEdit ? 'Update staff account details and role assignment.' : 'Create a staff account and assign a role.'}
+        </p>
 
         <form
           className="mt-4 space-y-4"
@@ -45,7 +49,7 @@ export function UserFormModal({ onClose, onSave }: UserFormModalProps) {
                 status,
               });
             } catch (err) {
-              setError(err instanceof Error ? err.message : 'Could not create user.');
+              setError(err instanceof Error ? err.message : `Could not ${isEdit ? 'update' : 'create'} user.`);
             }
           }}
         >
@@ -130,7 +134,7 @@ export function UserFormModal({ onClose, onSave }: UserFormModalProps) {
               Cancel
             </button>
             <button type="submit" className="lims-btn-primary">
-              Create User
+              {isEdit ? 'Save Changes' : 'Create User'}
             </button>
           </div>
         </form>

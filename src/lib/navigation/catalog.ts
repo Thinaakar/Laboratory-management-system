@@ -1,6 +1,6 @@
-/** Catalog section — single sidebar entry; in-page tabs for sub-routes. */
+/** @deprecated Catalog moved to Settings — use settings-nav.ts */
 
-export const CATALOG_BASE = '/tests';
+export const CATALOG_BASE = '/settings/tests';
 
 export const CATALOG_PATHS = ['/tests', '/tests/packages'] as const;
 

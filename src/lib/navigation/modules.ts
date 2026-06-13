@@ -73,11 +73,10 @@ export const LIMS_NAV: NavGroup[] = [
         permission: 'users.read',
         activePaths: ['/admin/users', '/admin/roles', '/admin/permissions'],
       },
-      { label: 'Branches', href: '/admin/branches', permission: 'settings.update' },
       { label: 'Audit Logs', href: '/admin/audit', permission: 'audit.read' },
       {
         label: 'Settings',
-        href: '/settings/general',
+        href: '/settings',
         permission: 'settings.read',
         activePaths: [
           '/settings',
@@ -86,8 +85,10 @@ export const LIMS_NAV: NavGroup[] = [
           '/settings/packages',
           '/settings/departments',
           '/settings/doctors',
+          '/settings/branches',
           '/tests',
           '/tests/packages',
+          '/admin/branches',
         ],
       },
     ],

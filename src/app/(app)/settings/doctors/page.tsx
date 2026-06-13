@@ -13,7 +13,8 @@ export default function SettingsDoctorsPage() {
         <table className="lims-table">
           <thead>
             <tr>
-              <th>Doctor</th>
+              <th>Doctor ID</th>
+              <th>Name</th>
               <th>Specialty</th>
               <th>Phone</th>
               <th>Referrals</th>
@@ -23,6 +24,7 @@ export default function SettingsDoctorsPage() {
           <tbody>
             {doctors.map((doctor) => (
               <tr key={doctor.id}>
+                <td className="font-mono text-xs">{doctor.id}</td>
                 <td className="font-medium text-slate-900">{doctor.doctorName}</td>
                 <td>{doctor.specialty ?? '—'}</td>
                 <td>{doctor.phone ?? '—'}</td>

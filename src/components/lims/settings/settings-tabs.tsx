@@ -10,6 +10,7 @@ const TABS = [
   { label: 'Packages', href: '/settings/packages' },
   { label: 'Departments', href: '/settings/departments' },
   { label: 'Doctors', href: '/settings/doctors' },
+  { label: 'Branches', href: '/settings/branches' },
 ];
 
 function isTabActive(pathname: string, href: string): boolean {

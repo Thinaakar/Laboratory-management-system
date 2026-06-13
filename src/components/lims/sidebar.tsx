@@ -45,6 +45,7 @@ const ICONS: Record<string, React.ReactNode> = {
   Results: <Beaker size={18} />,
   'Report Approval': <ClipboardCheck size={18} />,
   Reports: <FileText size={18} />,
+  'Health Packages': <Package size={18} />,
   Operations: <Layers size={18} />,
   Inventory: <Boxes size={18} />,
   Suppliers: <Truck size={18} />,

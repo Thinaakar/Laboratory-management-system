@@ -1,4 +1,4 @@
-/** Settings section — lab configuration and master data. */
+/** Settings section — master data and lab configuration. */
 
 export const SETTINGS_BASE = '/settings';
 
@@ -9,6 +9,7 @@ export const SETTINGS_PATHS = [
   '/settings/packages',
   '/settings/departments',
   '/settings/doctors',
+  '/settings/branches',
 ] as const;
 
 export function isSettingsPath(pathname: string): boolean {

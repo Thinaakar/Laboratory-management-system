@@ -4,7 +4,7 @@ import { SettingsShell } from '@/components/lims/settings/settings-shell';
 
 export default function SettingsGeneralPage() {
   return (
-    <SettingsShell description="Laboratory profile and system preferences">
+    <SettingsShell description="Lab profile, reports, and notification preferences">
       <div className="grid gap-4 lg:grid-cols-2">
         <section className="lims-card p-4">
           <h2 className="text-sm font-semibold text-slate-900">General</h2>

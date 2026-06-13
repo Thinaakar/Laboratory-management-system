@@ -25,7 +25,9 @@ export default function SettingsPackagesPage() {
               <tr key={pkg.id}>
                 <td className="font-medium text-slate-900">{pkg.name}</td>
                 <td>
-                  {pkg.testIds.map((id) => tests.find((t) => t.id === id)?.name ?? id).join(', ')}
+                  {pkg.testIds
+                    .map((id) => tests.find((t) => t.id === id)?.name ?? id)
+                    .join(', ')}
                 </td>
                 <td>{formatCurrency(pkg.price)}</td>
                 <td className="text-muted">{pkg.description ?? '—'}</td>

@@ -1,10 +1,11 @@
 'use client';
 
-import { Plus } from 'lucide-react';
+import { ArrowLeft, ClipboardList, Wallet } from 'lucide-react';
 import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { CollectPaymentModal } from '@/components/lims/billing/collect-payment-modal';
 import { DataTable } from '@/components/lims/data-table';
+import { ModuleActionHub } from '@/components/lims/module-action-hub';
 import { PageHeader } from '@/components/lims/page-header';
 import { FlashBanner } from '@/components/lims/flash-banner';
 import { StatusBadge, statusVariant } from '@/components/lims/status-badge';
@@ -13,9 +14,12 @@ import { getInvoices } from '@/lib/data/store';
 import type { Invoice } from '@/lib/types/lims';
 import { formatCurrency, formatDateTime } from '@/lib/utils';
 
+type BillingView = 'hub' | 'list';
+
 function BillingContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [view, setView] = useState<BillingView>('hub');
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -169,68 +173,91 @@ function BillingContent() {
     return statuses.sort();
   }, [invoices]);
 
+  const openCollectModal = () => {
+    setInitialInvoiceId(undefined);
+    setShowModal(true);
+  };
+
   return (
     <>
       <PageHeader
         title="Billing"
         description="Invoices and payment tracking"
         action={
-          <button
-            type="button"
-            onClick={() => {
-              setInitialInvoiceId(undefined);
-              setShowModal(true);
-            }}
-            className="lims-btn-primary"
-          >
-            <Plus className="h-4 w-4" />
-            Collect Payment
-          </button>
+          view !== 'hub' ? (
+            <button type="button" onClick={() => setView('hub')} className="lims-btn-secondary">
+              <ArrowLeft className="h-4 w-4" />
+              Back
+            </button>
+          ) : undefined
         }
       />
 
       <FlashBanner />
 
-      <DataTable
-        columns={columns}
-        data={table.rows}
-        rowKey={(inv) => inv.id}
-        emptyMessage={
-          invoices.length === 0
-            ? 'No invoices found. Collect payment to get started.'
-            : 'No invoices match your filters.'
-        }
-        search={{
-          value: search,
-          onChange: setSearch,
-          placeholder: 'Search by invoice, order, patient, or status…',
-        }}
-        filters={
-          <select
-            className="lims-input h-9 w-auto min-w-[8rem] text-xs"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-          >
-            <option value="all">All statuses</option>
-            {statusOptions.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
-        }
-        sortKey={table.sortKey}
-        sortDir={table.sortDir}
-        onSort={table.toggleSort}
-        pagination={{
-          page: table.page,
-          pageSize: table.pageSize,
-          totalItems: table.totalItems,
-          totalPages: table.totalPages,
-          onPageChange: table.setPage,
-          onPageSizeChange: table.setPageSize,
-        }}
-      />
+      {view === 'hub' && (
+        <ModuleActionHub
+          actions={[
+            {
+              id: 'collect',
+              label: 'Collect Payment',
+              description: 'Record a payment against an invoice and update billing status.',
+              icon: Wallet,
+              onSelect: openCollectModal,
+            },
+            {
+              id: 'list',
+              label: 'Invoice List',
+              description: 'Review all invoices, payment history, and outstanding balances.',
+              icon: ClipboardList,
+              onSelect: () => setView('list'),
+            },
+          ]}
+        />
+      )}
+
+      {view === 'list' && (
+        <DataTable
+          columns={columns}
+          data={table.rows}
+          rowKey={(inv) => inv.id}
+          emptyMessage={
+            invoices.length === 0
+              ? 'No invoices found. Collect payment to get started.'
+              : 'No invoices match your filters.'
+          }
+          search={{
+            value: search,
+            onChange: setSearch,
+            placeholder: 'Search by invoice, order, patient, or status…',
+          }}
+          filters={
+            <select
+              className="lims-input h-9 w-auto min-w-[8rem] text-xs"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              <option value="all">All statuses</option>
+              {statusOptions.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+          }
+          sortKey={table.sortKey}
+          sortDir={table.sortDir}
+          onSort={table.toggleSort}
+          pagination={{
+            page: table.page,
+            pageSize: table.pageSize,
+            totalItems: table.totalItems,
+            totalPages: table.totalPages,
+            onPageChange: table.setPage,
+            onPageSizeChange: table.setPageSize,
+          }}
+        />
+      )}
 
       {showModal && (
         <CollectPaymentModal

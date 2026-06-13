@@ -1,9 +1,10 @@
 'use client';
 
-import { Plus } from 'lucide-react';
+import { ArrowLeft, ClipboardList, TestTube2 } from 'lucide-react';
 import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { DataTable } from '@/components/lims/data-table';
+import { ModuleActionHub } from '@/components/lims/module-action-hub';
 import { PageHeader } from '@/components/lims/page-header';
 import { FlashBanner } from '@/components/lims/flash-banner';
 import { RegisterSampleModal } from '@/components/lims/samples/register-sample-modal';
@@ -13,9 +14,12 @@ import { getSamples } from '@/lib/data/store';
 import type { Sample } from '@/lib/types/lims';
 import { formatDateTime } from '@/lib/utils';
 
+type SamplesView = 'hub' | 'list';
+
 function SamplesContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [view, setView] = useState<SamplesView>('hub');
   const [showModal, setShowModal] = useState(false);
   const [samples, setSamples] = useState<Sample[]>([]);
   const [search, setSearch] = useState('');
@@ -149,51 +153,78 @@ function SamplesContent() {
         title="Samples"
         description="Sample registration and tracking"
         action={
-          <button type="button" onClick={() => setShowModal(true)} className="lims-btn-primary">
-            <Plus className="h-4 w-4" />
-            Register Sample
-          </button>
+          view !== 'hub' ? (
+            <button type="button" onClick={() => setView('hub')} className="lims-btn-secondary">
+              <ArrowLeft className="h-4 w-4" />
+              Back
+            </button>
+          ) : undefined
         }
       />
 
       <FlashBanner />
 
-      <DataTable
-        columns={columns}
-        data={table.rows}
-        rowKey={(s) => s.id}
-        emptyMessage={samples.length === 0 ? 'No samples registered yet.' : 'No samples match your filters.'}
-        search={{
-          value: search,
-          onChange: setSearch,
-          placeholder: 'Search by ID, barcode, patient, or order…',
-        }}
-        filters={
-          <select
-            className="lims-input h-9 w-auto min-w-[8rem] text-xs"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-          >
-            <option value="all">All statuses</option>
-            {statusOptions.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
-        }
-        sortKey={table.sortKey}
-        sortDir={table.sortDir}
-        onSort={table.toggleSort}
-        pagination={{
-          page: table.page,
-          pageSize: table.pageSize,
-          totalItems: table.totalItems,
-          totalPages: table.totalPages,
-          onPageChange: table.setPage,
-          onPageSizeChange: table.setPageSize,
-        }}
-      />
+      {view === 'hub' && (
+        <ModuleActionHub
+          actions={[
+            {
+              id: 'register',
+              label: 'Register Sample',
+              description: 'Collect and register a new sample with barcode tracking for lab processing.',
+              icon: TestTube2,
+              onSelect: () => setShowModal(true),
+            },
+            {
+              id: 'list',
+              label: 'Sample List',
+              description: 'View all registered samples, statuses, and collection timestamps.',
+              icon: ClipboardList,
+              onSelect: () => setView('list'),
+            },
+          ]}
+        />
+      )}
+
+      {view === 'list' && (
+        <DataTable
+          columns={columns}
+          data={table.rows}
+          rowKey={(s) => s.id}
+          emptyMessage={
+            samples.length === 0 ? 'No samples registered yet.' : 'No samples match your filters.'
+          }
+          search={{
+            value: search,
+            onChange: setSearch,
+            placeholder: 'Search by ID, barcode, patient, or order…',
+          }}
+          filters={
+            <select
+              className="lims-input h-9 w-auto min-w-[8rem] text-xs"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              <option value="all">All statuses</option>
+              {statusOptions.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+          }
+          sortKey={table.sortKey}
+          sortDir={table.sortDir}
+          onSort={table.toggleSort}
+          pagination={{
+            page: table.page,
+            pageSize: table.pageSize,
+            totalItems: table.totalItems,
+            totalPages: table.totalPages,
+            onPageChange: table.setPage,
+            onPageSizeChange: table.setPageSize,
+          }}
+        />
+      )}
 
       {showModal && (
         <RegisterSampleModal

@@ -1,9 +1,10 @@
 'use client';
 
-import { Plus } from 'lucide-react';
+import { ArrowLeft, ClipboardList, UserPlus } from 'lucide-react';
 import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { DataTable } from '@/components/lims/data-table';
+import { ModuleActionHub } from '@/components/lims/module-action-hub';
 import { PageHeader } from '@/components/lims/page-header';
 import { FlashBanner } from '@/components/lims/flash-banner';
 import { PatientRegistrationModal } from '@/components/lims/patients/patient-registration-modal';
@@ -12,10 +13,13 @@ import { getPatients } from '@/lib/data/patients-store';
 import type { Patient } from '@/lib/types/lims';
 import { formatDate, formatDateTime } from '@/lib/utils';
 
+type PatientsView = 'hub' | 'directory';
+
 function PatientsContent() {
   const searchParams = useSearchParams();
   const [patients, setPatients] = useState<Patient[]>([]);
   const [search, setSearch] = useState('');
+  const [view, setView] = useState<PatientsView>('hub');
   const [showModal, setShowModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
 
@@ -152,10 +156,16 @@ function PatientsContent() {
         title="Patients"
         description="Patient registry and demographics"
         action={
-          <button type="button" onClick={() => setShowModal(true)} className="lims-btn-primary">
-            <Plus className="h-4 w-4" />
-            Register Patient
-          </button>
+          view !== 'hub' ? (
+            <button
+              type="button"
+              onClick={() => setView('hub')}
+              className="lims-btn-secondary"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back
+            </button>
+          ) : undefined
         }
       />
 
@@ -166,32 +176,55 @@ function PatientsContent() {
         </div>
       )}
 
-      <DataTable
-        columns={columns}
-        data={table.rows}
-        rowKey={(p) => p.id}
-        emptyMessage={
-          patients.length === 0
-            ? 'No patients found. Register a new patient to get started.'
-            : 'No patients match your search.'
-        }
-        search={{
-          value: search,
-          onChange: setSearch,
-          placeholder: 'Search by name, ID, or phone…',
-        }}
-        sortKey={table.sortKey}
-        sortDir={table.sortDir}
-        onSort={table.toggleSort}
-        pagination={{
-          page: table.page,
-          pageSize: table.pageSize,
-          totalItems: table.totalItems,
-          totalPages: table.totalPages,
-          onPageChange: table.setPage,
-          onPageSizeChange: table.setPageSize,
-        }}
-      />
+      {view === 'hub' && (
+        <ModuleActionHub
+          actions={[
+            {
+              id: 'register',
+              label: 'Register Patient',
+              description: 'Add a new patient to the laboratory registry with demographics and contact details.',
+              icon: UserPlus,
+              onSelect: () => setShowModal(true),
+            },
+            {
+              id: 'directory',
+              label: 'Patient Details',
+              description: 'Browse, search, and review all registered patients and their records.',
+              icon: ClipboardList,
+              onSelect: () => setView('directory'),
+            },
+          ]}
+        />
+      )}
+
+      {view === 'directory' && (
+        <DataTable
+          columns={columns}
+          data={table.rows}
+          rowKey={(p) => p.id}
+          emptyMessage={
+            patients.length === 0
+              ? 'No patients found. Register a new patient to get started.'
+              : 'No patients match your search.'
+          }
+          search={{
+            value: search,
+            onChange: setSearch,
+            placeholder: 'Search by name, ID, or phone…',
+          }}
+          sortKey={table.sortKey}
+          sortDir={table.sortDir}
+          onSort={table.toggleSort}
+          pagination={{
+            page: table.page,
+            pageSize: table.pageSize,
+            totalItems: table.totalItems,
+            totalPages: table.totalPages,
+            onPageChange: table.setPage,
+            onPageSizeChange: table.setPageSize,
+          }}
+        />
+      )}
 
       {showModal && (
         <PatientRegistrationModal
@@ -199,6 +232,7 @@ function PatientsContent() {
           onSaved={(patient) => {
             refresh();
             setShowModal(false);
+            setView('directory');
             setSuccessMessage(`Patient ${patient.id} registered successfully.`);
           }}
         />

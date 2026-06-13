@@ -73,10 +73,6 @@ export function PatientRegistrationModal({ onClose, onSaved }: PatientRegistrati
       setError('Mobile number is required.');
       return;
     }
-    if (!email.trim()) {
-      setError('Email is required.');
-      return;
-    }
 
     try {
       const created = addPatient({
@@ -84,7 +80,7 @@ export function PatientRegistrationModal({ onClose, onSaved }: PatientRegistrati
         lastName: lastName || undefined,
         phone,
         gender,
-        email: email.trim(),
+        email: email.trim() || undefined,
         dateOfBirth: dateOfBirth || undefined,
         age: age ? Number(age) : undefined,
         address: address || undefined,
@@ -217,15 +213,12 @@ export function PatientRegistrationModal({ onClose, onSaved }: PatientRegistrati
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-muted">
-                Email <span className="text-error">*</span>
-              </label>
+              <label className="mb-1 block text-xs font-medium text-muted">Email (optional)</label>
               <input
                 className="lims-input"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                required
                 placeholder="name@email.com"
               />
             </div>

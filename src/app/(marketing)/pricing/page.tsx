@@ -7,9 +7,9 @@ export default function PricingPage() {
       <div className="mkt-page-hero">
         <div className="mx-auto max-w-6xl px-6 text-center">
           <p className="text-sm font-semibold uppercase tracking-wider text-primary">Pricing</p>
-          <h1 className="mt-2 mkt-section-title">Transparent plans for every lab size</h1>
+          <h1 className="mt-2 mkt-section-title">Plans for every lab size</h1>
           <p className="mx-auto mt-4 max-w-2xl text-muted">
-            Start with Starter, scale to Professional, or deploy Enterprise across multiple branches.
+            Choose Starter, Professional, or Enterprise — contact our team for a custom quote.
           </p>
         </div>
       </div>

@@ -8,7 +8,7 @@ export const loginSchema = z.object({
 export const patientCreateSchema = z.object({
   name: z.string().min(1),
   phone: z.string().min(1),
-  email: z.string().email(),
+  email: z.string().email().optional(),
   dateOfBirth: z.string().min(1),
   gender: z.enum(['Male', 'Female', 'Other']),
   address: z.string().optional(),

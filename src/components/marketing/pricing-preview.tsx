@@ -4,16 +4,16 @@ import { Check } from 'lucide-react';
 const PLANS = [
   {
     name: 'Starter',
-    price: '₹4,999',
-    period: '/month',
+    price: 'Custom',
+    period: '',
     desc: 'Single branch laboratories getting started with digital workflows.',
     features: ['Up to 500 orders/month', 'Patient & order management', 'Sample tracking', 'Basic reports', 'Email support'],
     featured: false,
   },
   {
     name: 'Professional',
-    price: '₹12,999',
-    period: '/month',
+    price: 'Custom',
+    period: '',
     desc: 'Growing labs with multiple departments and advanced workflows.',
     features: ['Unlimited orders', 'Pathologist approval workflow', 'Report delivery notifications', 'Analytics dashboard', 'Inventory & equipment', 'Priority support'],
     featured: true,
@@ -37,7 +37,7 @@ export function PricingPreview() {
           <h2 className="mt-2 text-3xl font-bold text-slate-900 md:text-4xl">
             Plans for every laboratory size
           </h2>
-          <p className="mt-3 text-muted">Transparent pricing with no hidden fees. Upgrade as you grow.</p>
+          <p className="mt-3 text-muted">Contact us for a plan tailored to your laboratory size and workflow.</p>
         </div>
 
         <div className="mt-14 grid gap-6 lg:grid-cols-3">
@@ -75,15 +75,12 @@ export function PricingPreview() {
                   p.featured ? 'mkt-btn-primary w-full' : 'mkt-btn-secondary w-full'
                 }`}
               >
-                {p.name === 'Enterprise' ? 'Contact Sales' : 'Get Started'}
+                Contact Sales
               </Link>
             </div>
           ))}
         </div>
 
-        <p className="mt-8 text-center text-sm text-muted">
-          <Link href="/pricing" className="font-medium text-primary hover:underline">View full pricing comparison →</Link>
-        </p>
       </div>
     </section>
   );

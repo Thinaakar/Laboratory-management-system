@@ -44,18 +44,18 @@ export function calculateAgeFromDob(dateOfBirth: string): number | undefined {
 }
 
 export const seedPatients: Patient[] = [
-  withNames({ id: 'PAT-000001', name: 'Rahul Verma', phone: '+91 98765 43210', email: 'rahul@email.com', dateOfBirth: '1988-04-12', gender: 'Male', patientType: 'Walk-In', createdAt: `${today}T08:30:00` }),
-  withNames({ id: 'PAT-000002', name: 'Anita Desai', phone: '+91 98765 43211', email: 'anita@email.com', dateOfBirth: '1995-11-03', gender: 'Female', patientType: 'Scheduled', createdAt: `${today}T09:15:00` }),
+  withNames({ id: 'PAT-000001', name: 'Rahul Verma', phone: '+91 98765 43210', email: 'rahul.verma@gmail.com', dateOfBirth: '1988-04-12', gender: 'Male', patientType: 'Walk-In', createdAt: `${today}T08:30:00` }),
+  withNames({ id: 'PAT-000002', name: 'Anita Desai', phone: '+91 98765 43211', dateOfBirth: '1995-11-03', gender: 'Female', patientType: 'Scheduled', createdAt: `${today}T09:15:00` }),
   withNames({ id: 'PAT-000003', name: 'Suresh Patel', phone: '+91 98765 43212', dateOfBirth: '1975-07-22', gender: 'Male', patientType: 'Walk-In', createdAt: '2026-03-01T10:00:00' }),
-  withNames({ id: 'PAT-000004', name: 'Kavita Nair', phone: '+91 98765 43213', email: 'kavita@email.com', dateOfBirth: '1990-02-18', gender: 'Female', patientType: 'Corporate', createdAt: `${today}T10:05:00` }),
+  withNames({ id: 'PAT-000004', name: 'Kavita Nair', phone: '+91 98765 43213', dateOfBirth: '1990-02-18', gender: 'Female', patientType: 'Corporate', createdAt: `${today}T10:05:00` }),
   withNames({ id: 'PAT-000005', name: 'Vikram Joshi', phone: '+91 98765 43214', dateOfBirth: '1982-09-07', gender: 'Male', patientType: 'Walk-In', createdAt: `${today}T11:20:00` }),
-  withNames({ id: 'PAT-000006', name: 'Meera Iyer', phone: '+91 98765 43215', email: 'meera@email.com', dateOfBirth: '1998-06-25', gender: 'Female', patientType: 'Insurance', createdAt: dateOffset(1, 9, 30) }),
+  withNames({ id: 'PAT-000006', name: 'Meera Iyer', phone: '+91 98765 43215', email: 'meera.iyer@outlook.com', dateOfBirth: '1998-06-25', gender: 'Female', patientType: 'Insurance', createdAt: dateOffset(1, 9, 30) }),
   withNames({ id: 'PAT-000007', name: 'Arjun Mehta', phone: '+91 98765 43216', dateOfBirth: '1970-12-01', gender: 'Male', patientType: 'Walk-In', createdAt: dateOffset(2, 14, 0) }),
-  withNames({ id: 'PAT-000008', name: 'Priya Sharma', phone: '+91 98765 43217', email: 'priya.p@email.com', dateOfBirth: '1993-08-14', gender: 'Female', patientType: 'Scheduled', createdAt: dateOffset(3, 11, 0) }),
+  withNames({ id: 'PAT-000008', name: 'Priya Sharma', phone: '+91 98765 43217', dateOfBirth: '1993-08-14', gender: 'Female', patientType: 'Scheduled', createdAt: dateOffset(3, 11, 0) }),
   withNames({ id: 'PAT-000009', name: 'Rohan Das', phone: '+91 98765 43218', dateOfBirth: '1985-03-30', gender: 'Male', patientType: 'Camp', createdAt: dateOffset(4, 16, 45) }),
-  withNames({ id: 'PAT-000010', name: 'Sneha Kapoor', phone: '+91 98765 43219', email: 'sneha@email.com', dateOfBirth: '1991-11-11', gender: 'Female', patientType: 'Walk-In', createdAt: dateOffset(5, 10, 15) }),
+  withNames({ id: 'PAT-000010', name: 'Sneha Kapoor', phone: '+91 98765 43219', dateOfBirth: '1991-11-11', gender: 'Female', patientType: 'Walk-In', createdAt: dateOffset(5, 10, 15) }),
   withNames({ id: 'PAT-000011', name: 'Kiran Reddy', phone: '+91 98765 43220', dateOfBirth: '1978-07-09', gender: 'Male', patientType: 'Walk-In', createdAt: '2026-02-15T09:00:00' }),
-  withNames({ id: 'PAT-000012', name: 'Ananya Singh', phone: '+91 98765 43221', email: 'ananya@email.com', dateOfBirth: '2000-01-22', gender: 'Female', patientType: 'Scheduled', createdAt: dateOffset(6, 8, 0) }),
+  withNames({ id: 'PAT-000012', name: 'Ananya Singh', phone: '+91 98765 43221', email: 'ananya.singh@yahoo.com', dateOfBirth: '2000-01-22', gender: 'Female', patientType: 'Scheduled', createdAt: dateOffset(6, 8, 0) }),
 ].map((p) => ({
   ...p,
   age: p.dateOfBirth ? calculateAgeFromDob(p.dateOfBirth) : undefined,
@@ -105,7 +105,7 @@ export function addPatient(input: {
   lastName?: string;
   phone: string;
   gender: Patient['gender'];
-  email: string;
+  email?: string;
   dateOfBirth?: string;
   age?: number;
   address?: string;
@@ -128,7 +128,7 @@ export function addPatient(input: {
     lastName: lastName || undefined,
     name,
     phone: input.phone.trim(),
-    email: input.email.trim(),
+    email: input.email?.trim() || undefined,
     dateOfBirth,
     age,
     gender: input.gender,

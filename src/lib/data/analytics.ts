@@ -49,13 +49,22 @@ export interface AnalyticsSnapshot {
 
 const PIE_COLORS = {
   primary: '#53bdeb',
-  emerald: '#10b981',
-  amber: '#fdba74',
+  emerald: '#34d399',
+  mild: '#94a3b8',
   violet: '#8b5cf6',
-  rose: '#f43f5e',
-  slate: '#94a3b8',
-  cyan: '#06b6d4',
-  orange: '#f97316',
+  rose: '#f87171',
+  slate: '#cbd5e1',
+  cyan: '#38bdf8',
+  soft: '#a5b4fc',
+};
+
+/** Mild, fixed colors per sample stage (Sample Pipeline chart) */
+const SAMPLE_STATUS_COLORS: Record<string, string> = {
+  Completed: PIE_COLORS.primary,
+  Processing: PIE_COLORS.cyan,
+  Registered: PIE_COLORS.violet,
+  Collected: PIE_COLORS.mild,
+  Received: PIE_COLORS.emerald,
 };
 
 function countByField<T>(
@@ -122,31 +131,34 @@ export function getAnalyticsSnapshot(): AnalyticsSnapshot {
   const reportStatus = countByField(
     results,
     (r) => r.approvalStatus,
-    [PIE_COLORS.amber, PIE_COLORS.emerald, PIE_COLORS.rose],
+    [PIE_COLORS.mild, PIE_COLORS.emerald, PIE_COLORS.rose],
   );
 
   const paymentStatus = countByField(
     invoices,
     (i) => i.status,
-    [PIE_COLORS.emerald, PIE_COLORS.amber, PIE_COLORS.violet],
+    [PIE_COLORS.emerald, PIE_COLORS.mild, PIE_COLORS.violet],
   );
 
   const sampleStatus = countByField(
     samples,
     (s) => s.status,
-    [PIE_COLORS.primary, PIE_COLORS.cyan, PIE_COLORS.violet, PIE_COLORS.amber, PIE_COLORS.emerald],
-  );
+    [PIE_COLORS.primary, PIE_COLORS.cyan, PIE_COLORS.violet, PIE_COLORS.mild, PIE_COLORS.emerald],
+  ).map((slice) => ({
+    ...slice,
+    color: SAMPLE_STATUS_COLORS[slice.label] ?? slice.color,
+  }));
 
   const orderStatus = countByField(
     orders,
     (o) => o.status,
-    [PIE_COLORS.amber, PIE_COLORS.primary, PIE_COLORS.emerald, PIE_COLORS.slate],
+    [PIE_COLORS.mild, PIE_COLORS.primary, PIE_COLORS.emerald, PIE_COLORS.slate],
   );
 
   const departmentMix = countByField(
     tests,
     (t) => t.departmentName,
-    [PIE_COLORS.primary, PIE_COLORS.emerald, PIE_COLORS.violet, PIE_COLORS.orange, PIE_COLORS.rose],
+    [PIE_COLORS.primary, PIE_COLORS.emerald, PIE_COLORS.violet, PIE_COLORS.soft, PIE_COLORS.rose],
   ).map((slice) => ({
     ...slice,
     value: orders.reduce(

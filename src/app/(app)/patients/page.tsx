@@ -1,12 +1,12 @@
 'use client';
 
-import { ArrowLeft, ClipboardList, UserPlus } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { DataTable } from '@/components/lims/data-table';
-import { ModuleActionHub } from '@/components/lims/module-action-hub';
 import { PageHeader } from '@/components/lims/page-header';
 import { FlashBanner } from '@/components/lims/flash-banner';
+import { PatientHub } from '@/components/lims/patients/patient-hub';
 import { PatientRegistrationModal } from '@/components/lims/patients/patient-registration-modal';
 import { defaultStringSort, useDataTable } from '@/hooks/use-data-table';
 import { getPatients } from '@/lib/data/patients-store';
@@ -151,79 +151,66 @@ function PatientsContent() {
   );
 
   return (
-    <>
-      <PageHeader
-        title="Patients"
-        description="Patient registry and demographics"
-        action={
-          view !== 'hub' ? (
-            <button
-              type="button"
-              onClick={() => setView('hub')}
-              className="lims-btn-secondary"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back
-            </button>
-          ) : undefined
-        }
-      />
-
+    <div className="patients-module">
       <FlashBanner />
       {successMessage && (
-        <div className="mb-3 rounded-md border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm text-emerald-800">
+        <div className="mb-4 rounded-[20px] border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm text-emerald-800">
           {successMessage}
         </div>
       )}
 
       {view === 'hub' && (
-        <ModuleActionHub
-          actions={[
-            {
-              id: 'register',
-              label: 'Register Patient',
-              description: 'Add a new patient to the laboratory registry with demographics and contact details.',
-              icon: UserPlus,
-              onSelect: () => setShowModal(true),
-            },
-            {
-              id: 'directory',
-              label: 'Patient Details',
-              description: 'Browse, search, and review all registered patients and their records.',
-              icon: ClipboardList,
-              onSelect: () => setView('directory'),
-            },
-          ]}
+        <PatientHub
+          patients={patients}
+          onRegister={() => setShowModal(true)}
+          onOpenDirectory={() => setView('directory')}
         />
       )}
 
       {view === 'directory' && (
-        <DataTable
-          columns={columns}
-          data={table.rows}
-          rowKey={(p) => p.id}
-          emptyMessage={
-            patients.length === 0
-              ? 'No patients found. Register a new patient to get started.'
-              : 'No patients match your search.'
-          }
-          search={{
-            value: search,
-            onChange: setSearch,
-            placeholder: 'Search by name, ID, or phone…',
-          }}
-          sortKey={table.sortKey}
-          sortDir={table.sortDir}
-          onSort={table.toggleSort}
-          pagination={{
-            page: table.page,
-            pageSize: table.pageSize,
-            totalItems: table.totalItems,
-            totalPages: table.totalPages,
-            onPageChange: table.setPage,
-            onPageSizeChange: table.setPageSize,
-          }}
-        />
+        <>
+          <PageHeader
+            title="Patient Directory"
+            description="Browse and search all registered patients"
+            action={
+              <button
+                type="button"
+                onClick={() => setView('hub')}
+                className="lims-btn-secondary"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back
+              </button>
+            }
+          />
+
+          <DataTable
+            columns={columns}
+            data={table.rows}
+            rowKey={(p) => p.id}
+            emptyMessage={
+              patients.length === 0
+                ? 'No patients found. Register a new patient to get started.'
+                : 'No patients match your search.'
+            }
+            search={{
+              value: search,
+              onChange: setSearch,
+              placeholder: 'Search by name, ID, or phone…',
+            }}
+            sortKey={table.sortKey}
+            sortDir={table.sortDir}
+            onSort={table.toggleSort}
+            pagination={{
+              page: table.page,
+              pageSize: table.pageSize,
+              totalItems: table.totalItems,
+              totalPages: table.totalPages,
+              onPageChange: table.setPage,
+              onPageSizeChange: table.setPageSize,
+            }}
+          />
+        </>
       )}
 
       {showModal && (
@@ -237,7 +224,7 @@ function PatientsContent() {
           }}
         />
       )}
-    </>
+    </div>
   );
 }
 

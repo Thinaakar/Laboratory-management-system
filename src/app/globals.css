@@ -21,12 +21,18 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply font-display tracking-tight text-slate-900;
   }
 
   /* Custom Form Elements */
-  input[type="checkbox"], input[type="radio"] {
+  input[type="checkbox"],
+  input[type="radio"] {
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
@@ -77,7 +83,8 @@
   .lims-app h4,
   .lims-app h5,
   .lims-app h6 {
-    font-family: var(--font-plus-jakarta-sans), var(--font-inter), system-ui, sans-serif;
+    font-family:
+      var(--font-plus-jakarta-sans), var(--font-inter), system-ui, sans-serif;
     font-weight: 600;
   }
 
@@ -285,7 +292,7 @@
   }
 
   .lims-badge::before {
-    content: '';
+    content: "";
     @apply inline-block h-1.5 w-1.5 shrink-0 rounded-full;
   }
 
@@ -342,6 +349,50 @@
     @apply flex shrink-0 justify-end gap-2 border-t border-slate-200 bg-slate-50/50 px-5 py-3;
   }
 
+  /* ── Patient Hub ── */
+  .patients-module {
+    font-family: var(--font-manrope), var(--font-inter), system-ui, sans-serif;
+  }
+
+  .patients-module h1,
+  .patients-module h2,
+  .patients-module h3 {
+    font-family: var(--font-plus-jakarta-sans), var(--font-inter), system-ui, sans-serif;
+  }
+
+  .patient-hub {
+    font-family: var(--font-manrope), var(--font-inter), system-ui, sans-serif;
+  }
+
+  .patient-hub-heading {
+    font-family: var(--font-plus-jakarta-sans), var(--font-inter), system-ui, sans-serif;
+  }
+
+  .patient-hub-card {
+    @apply rounded-[20px] border border-slate-200/70 bg-white;
+    box-shadow: 0 1px 2px 0 rgba(15, 23, 42, 0.04), 0 4px 16px -2px rgba(15, 23, 42, 0.06);
+  }
+
+  .patient-hub-cta {
+    @apply inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-semibold text-white transition-all duration-150;
+    box-shadow: 0 1px 2px 0 rgba(83, 189, 235, 0.25);
+  }
+
+  .patient-hub-cta:hover {
+    @apply bg-primary-500;
+    box-shadow: 0 4px 12px 0 rgba(83, 189, 235, 0.3);
+  }
+
+  .patient-hub-cta-secondary {
+    @apply inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition-all duration-150;
+    box-shadow: 0 1px 2px 0 rgba(15, 23, 42, 0.04);
+  }
+
+  .patient-hub-cta-secondary:hover {
+    @apply border-slate-300 bg-[#F8FAFC] text-slate-900;
+    box-shadow: 0 4px 12px 0 rgba(15, 23, 42, 0.06);
+  }
+
   /* ── Marketing (unchanged scope) ── */
   .mkt-btn-primary {
     @apply inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-[0_1px_2px_0_rgba(83,189,235,0.2),inset_0_-1px_0_0_rgba(0,0,0,0.1)] transition-all duration-150 hover:bg-primary-500 hover:shadow-[0_2px_8px_0_rgba(83,189,235,0.25)] focus:outline-none focus:ring-4 focus:ring-primary/20 active:scale-[0.98];
@@ -368,19 +419,35 @@
     display: none;
   }
 
-  .auth-premium-layout, .marketing-premium-layout {
+  .auth-premium-layout,
+  .marketing-premium-layout {
     font-family: var(--font-manrope), system-ui, sans-serif;
   }
 
-  .auth-premium-layout h1, .auth-premium-layout h2, .auth-premium-layout h3, .auth-premium-layout h4, .auth-premium-layout h5, .auth-premium-layout h6,
-  .marketing-premium-layout h1, .marketing-premium-layout h2, .marketing-premium-layout h3, .marketing-premium-layout h4, .marketing-premium-layout h5, .marketing-premium-layout h6 {
+  .auth-premium-layout h1,
+  .auth-premium-layout h2,
+  .auth-premium-layout h3,
+  .auth-premium-layout h4,
+  .auth-premium-layout h5,
+  .auth-premium-layout h6,
+  .marketing-premium-layout h1,
+  .marketing-premium-layout h2,
+  .marketing-premium-layout h3,
+  .marketing-premium-layout h4,
+  .marketing-premium-layout h5,
+  .marketing-premium-layout h6 {
     font-family: var(--font-plus-jakarta-sans), system-ui, sans-serif;
     font-weight: 700;
   }
 
   @keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
   }
 
   .animate-float-slow {

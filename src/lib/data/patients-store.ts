@@ -277,7 +277,7 @@ export function updatePatient(
     lastName?: string;
     phone: string;
     gender: Patient["gender"];
-    email?: string;
+    bloodGroup?: BloodGroup;
     dateOfBirth?: string;
     age?: number;
     address?: string;

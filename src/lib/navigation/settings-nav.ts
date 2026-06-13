@@ -64,3 +64,40 @@ export const LEGACY_OPERATIONS_REDIRECTS: Record<string, string> = {
   '/suppliers': '/settings/suppliers',
   '/equipment': '/settings/equipment',
 };
+
+/** Any of these grants the Settings sidebar item */
+export const SETTINGS_SIDEBAR_PERMISSIONS = [
+  'settings.read',
+  'tests.read',
+  'inventory.read',
+  'equipment.read',
+] as const;
+
+export function getDefaultSettingsPath(can: (permission: string) => boolean): string {
+  if (can('settings.read')) return '/settings/general';
+  if (can('tests.read')) return '/settings/tests';
+  if (can('inventory.read')) return '/settings/inventory';
+  if (can('equipment.read')) return '/settings/equipment';
+  return '/settings/general';
+}
+
+export function canAccessSettingsPath(
+  pathname: string,
+  can: (permission: string) => boolean,
+): boolean {
+  if (isSettingsGeneralPath(pathname)) return can('settings.read');
+  if (isSettingsMasterDataPath(pathname)) return can('tests.read');
+  if (pathname === '/settings/inventory' || pathname.startsWith('/settings/inventory/')) {
+    return can('inventory.read');
+  }
+  if (pathname === '/settings/suppliers' || pathname.startsWith('/settings/suppliers/')) {
+    return can('inventory.read');
+  }
+  if (pathname === '/settings/equipment' || pathname.startsWith('/settings/equipment/')) {
+    return can('equipment.read');
+  }
+  if (pathname === '/settings' || pathname === SETTINGS_BASE) {
+    return SETTINGS_SIDEBAR_PERMISSIONS.some((p) => can(p));
+  }
+  return false;
+}

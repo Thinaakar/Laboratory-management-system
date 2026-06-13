@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import { LabCoreLogo } from '@/components/lims/labcore-logo';
 import { LIMS_NAV } from '@/lib/navigation/modules';
+import { getDefaultSettingsPath } from '@/lib/navigation/settings-nav';
 import { clearSession, getSession, type SessionUser } from '@/lib/auth/demo-users';
 import { logAuditAction } from '@/lib/audit/log-action';
 import { usePermissions } from '@/hooks/use-permissions';
@@ -112,11 +113,13 @@ export function LimsSidebar() {
               )}
               <ul className="space-y-0.5">
                 {items.map((item) => {
+                  const href =
+                    item.label === 'Settings' ? getDefaultSettingsPath(can) : item.href;
                   const active = isNavActive(pathname, item.href, item.activePaths);
                   return (
                     <li key={`${group.title}-${item.href}`}>
                       <Link
-                        href={item.href}
+                        href={href}
                         className={cn('lims-nav-link', active && 'lims-nav-link-active')}
                       >
                         {ICONS[item.label] ?? <Activity size={18} />}

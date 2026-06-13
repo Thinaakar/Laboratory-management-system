@@ -39,7 +39,7 @@ export const WORKFLOW_STEPS: NavItem[] = [
 export const LIMS_NAV: NavGroup[] = [
   {
     title: 'Overview',
-    items: [{ label: 'Dashboard', href: '/dashboard' }],
+    items: [{ label: 'Dashboard', href: '/dashboard', permission: 'dashboard.read' }],
   },
   {
     title: 'Daily Workflow',
@@ -65,7 +65,7 @@ export const LIMS_NAV: NavGroup[] = [
       {
         label: 'Settings',
         href: '/settings',
-        permission: 'settings.read',
+        permissions: ['settings.read', 'tests.read', 'inventory.read', 'equipment.read'],
         activePaths: [
           '/settings',
           '/settings/general',

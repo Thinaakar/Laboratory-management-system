@@ -32,29 +32,34 @@ export function SettingsTabs() {
   const pathname = usePathname();
   const { can } = usePermissions();
 
+  const canGeneral = can('settings.read');
+  const canMasterData = can('tests.read');
   const visibleStockTabs = STOCKS_TABS.filter((tab) => can(tab.permission));
+  const canStocks = visibleStockTabs.length > 0;
   const stocksSectionHref = visibleStockTabs[0]?.href ?? '/settings/inventory';
 
   const sections = [
-    {
+    canGeneral && {
       label: 'General',
       href: '/settings/general',
       active: isSettingsGeneralPath(pathname),
     },
-    {
+    canMasterData && {
       label: 'Master Data',
       href: '/settings/tests',
       active: isSettingsMasterDataPath(pathname),
     },
-    {
+    canStocks && {
       label: 'Stocks',
       href: stocksSectionHref,
       active: isSettingsStocksPath(pathname),
     },
-  ];
+  ].filter(Boolean) as { label: string; href: string; active: boolean }[];
 
-  const showMasterDataTabs = isSettingsMasterDataPath(pathname);
-  const showStocksTabs = isSettingsStocksPath(pathname) && visibleStockTabs.length > 0;
+  const showMasterDataTabs = canMasterData && isSettingsMasterDataPath(pathname);
+  const showStocksTabs = canStocks && isSettingsStocksPath(pathname);
+
+  if (!sections.length) return null;
 
   return (
     <div className="mb-6 space-y-3">

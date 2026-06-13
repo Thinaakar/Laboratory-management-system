@@ -1,4 +1,5 @@
 import type { Supplier } from '@/lib/types/lims';
+import { logAuditAction } from '@/lib/audit/log-action';
 
 const STORAGE_KEY = 'labcore-suppliers-v1';
 
@@ -54,5 +55,10 @@ export function addSupplier(input: {
   };
   memorySuppliers = [...suppliers, created];
   saveSuppliers(memorySuppliers);
+  logAuditAction({
+    action: 'CREATE',
+    module: 'stocks',
+    details: `Added supplier ${created.name}`,
+  });
   return created;
 }

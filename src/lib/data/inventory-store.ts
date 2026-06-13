@@ -1,4 +1,5 @@
 import type { InventoryItem } from '@/lib/types/lims';
+import { logAuditAction } from '@/lib/audit/log-action';
 
 const STORAGE_KEY = 'labcore-inventory-v1';
 
@@ -67,5 +68,10 @@ export function addInventoryItem(input: {
   };
   memoryInventory = [...items, created];
   saveInventory(memoryInventory);
+  logAuditAction({
+    action: 'CREATE',
+    module: 'stocks',
+    details: `Added inventory item ${created.name} (${created.id})`,
+  });
   return created;
 }

@@ -1,15 +1,33 @@
-"use client";
+'use client';
 
-import { SettingsShell } from "@/components/lims/settings/settings-shell";
-import { StatusBadge } from "@/components/lims/status-badge";
-import { getTests } from "@/lib/data/store";
-import { formatCurrency } from "@/lib/utils";
+import { useEffect, useState } from 'react';
+import { Plus } from 'lucide-react';
+import { SettingsShell } from '@/components/lims/settings/settings-shell';
+import { TestFormModal } from '@/components/lims/settings/test-form-modal';
+import { StatusBadge } from '@/components/lims/status-badge';
+import { addTest, getTests } from '@/lib/data/tests-store';
+import { formatCurrency } from '@/lib/utils';
+import type { LabTest } from '@/lib/types/lims';
 
 export default function SettingsTestsPage() {
-  const tests = getTests();
+  const [tests, setTests] = useState<LabTest[]>([]);
+  const [showModal, setShowModal] = useState(false);
+
+  const refresh = () => setTests(getTests());
+
+  useEffect(() => {
+    refresh();
+  }, []);
 
   return (
     <SettingsShell description="Test catalog — pricing, sample types, and reference ranges">
+      <div className="mb-4 flex justify-end">
+        <button type="button" onClick={() => setShowModal(true)} className="lims-btn-primary">
+          <Plus className="h-4 w-4" />
+          New Test
+        </button>
+      </div>
+
       <div className="lims-card overflow-x-auto">
         <table className="lims-table">
           <thead>
@@ -33,13 +51,13 @@ export default function SettingsTestsPage() {
                 <td>{t.departmentName}</td>
                 <td>{t.sampleType}</td>
                 <td>{t.turnaroundHours}</td>
-                <td>{t.unit ?? "—"}</td>
-                <td className="text-xs">{t.referenceRange ?? "—"}</td>
+                <td>{t.unit ?? '—'}</td>
+                <td className="text-xs">{t.referenceRange ?? '—'}</td>
                 <td>{formatCurrency(t.price)}</td>
                 <td>
                   <StatusBadge
-                    label={t.isActive ? "Active" : "Inactive"}
-                    variant={t.isActive ? "success" : "neutral"}
+                    label={t.isActive ? 'Active' : 'Inactive'}
+                    variant={t.isActive ? 'success' : 'neutral'}
                   />
                 </td>
               </tr>
@@ -47,6 +65,17 @@ export default function SettingsTestsPage() {
           </tbody>
         </table>
       </div>
+
+      {showModal && (
+        <TestFormModal
+          onClose={() => setShowModal(false)}
+          onSave={(data) => {
+            addTest(data);
+            setShowModal(false);
+            refresh();
+          }}
+        />
+      )}
     </SettingsShell>
   );
 }

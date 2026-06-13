@@ -1,4 +1,5 @@
 import type { Appointment, OrderPriority } from '@/lib/types/lims';
+import { logAuditAction } from '@/lib/audit/log-action';
 
 const STORAGE_KEY = 'labcore-appointments-v1';
 
@@ -112,5 +113,10 @@ export function addBooking(input: {
   };
   memoryAppointments = [...appointments, created];
   saveAppointments(memoryAppointments);
+  logAuditAction({
+    action: 'CREATE',
+    module: 'appointments',
+    details: `Scheduled ${created.id} for ${created.patientName}`,
+  });
   return created;
 }

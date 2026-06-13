@@ -7,6 +7,7 @@ import { PageHeader } from '@/components/lims/page-header';
 import { FlashBanner } from '@/components/lims/flash-banner';
 import { StatusBadge } from '@/components/lims/status-badge';
 import { getResults } from '@/lib/data/store';
+import { logAuditAction } from '@/lib/audit/log-action';
 import { formatDateTime } from '@/lib/utils';
 
 function ApprovalContent() {
@@ -61,14 +62,28 @@ function ApprovalContent() {
                       <button
                         type="button"
                         className="lims-btn-primary px-3 py-1 text-xs"
-                        onClick={() => router.push('/reports?success=approved')}
+                        onClick={() => {
+                          logAuditAction({
+                            action: 'APPROVE',
+                            module: 'reports',
+                            details: `Approved result ${r.id} — ${r.testName}`,
+                          });
+                          router.push('/reports?success=approved');
+                        }}
                       >
                         Approve
                       </button>
                       <button
                         type="button"
                         className="lims-btn-secondary px-3 py-1 text-xs"
-                        onClick={() => router.push('/results?success=rejected')}
+                        onClick={() => {
+                          logAuditAction({
+                            action: 'REJECT',
+                            module: 'reports',
+                            details: `Rejected result ${r.id} — ${r.testName}`,
+                          });
+                          router.push('/results?success=rejected');
+                        }}
                       >
                         Reject
                       </button>

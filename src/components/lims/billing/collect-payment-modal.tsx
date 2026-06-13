@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { X } from 'lucide-react';
 import { ModalPortal } from '@/components/lims/modal-portal';
 import { getInvoices } from '@/lib/data/store';
+import { logAuditAction } from '@/lib/audit/log-action';
 import { formatCurrency } from '@/lib/utils';
 
 interface CollectPaymentModalProps {
@@ -64,6 +65,11 @@ export function CollectPaymentModal({
       return;
     }
 
+    logAuditAction({
+      action: 'UPDATE',
+      module: 'billing',
+      details: `Recorded ${method} payment of ₹${amount} for ${selectedInvoice.id}`,
+    });
     onSaved();
   };
 

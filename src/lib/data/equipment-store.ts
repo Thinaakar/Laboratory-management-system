@@ -1,4 +1,5 @@
 import type { Equipment } from '@/lib/types/lims';
+import { logAuditAction } from '@/lib/audit/log-action';
 
 const STORAGE_KEY = 'labcore-equipment-v1';
 
@@ -64,5 +65,10 @@ export function addEquipment(input: {
   };
   memoryEquipment = [...equipment, created];
   saveEquipment(memoryEquipment);
+  logAuditAction({
+    action: 'CREATE',
+    module: 'stocks',
+    details: `Added equipment ${created.name} (${created.id})`,
+  });
   return created;
 }

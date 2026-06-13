@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { saveSession, SUPER_ADMIN_DEMO, validateLogin } from '@/lib/auth/demo-users';
+import { logAuditAction } from '@/lib/audit/log-action';
 
 const REMEMBER_KEY = 'labcore-remember-email';
 
@@ -34,6 +35,13 @@ export function LoginFormCard() {
 
   const completeSignIn = (user: { displayName: string; email: string; role: string }) => {
     saveSession({ name: user.displayName, email: user.email, role: user.role });
+    logAuditAction({
+      action: 'LOGIN',
+      module: 'auth',
+      details: `User signed in`,
+      userId: user.email,
+      userName: user.displayName,
+    });
     setSuccess('Signed in successfully. Redirecting to your dashboard…');
     setTimeout(() => router.push('/dashboard'), 600);
   };

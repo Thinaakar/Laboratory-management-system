@@ -1,14 +1,32 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+import { Plus } from 'lucide-react';
 import { SettingsShell } from '@/components/lims/settings/settings-shell';
+import { BranchFormModal } from '@/components/lims/settings/branch-form-modal';
 import { StatusBadge } from '@/components/lims/status-badge';
-import { getBranches } from '@/lib/data/store';
+import { addBranch, getBranches } from '@/lib/data/branches-store';
+import type { Branch } from '@/lib/types/lims';
 
 export default function SettingsBranchesPage() {
-  const branches = getBranches();
+  const [branches, setBranches] = useState<Branch[]>([]);
+  const [showModal, setShowModal] = useState(false);
+
+  const refresh = () => setBranches(getBranches());
+
+  useEffect(() => {
+    refresh();
+  }, []);
 
   return (
     <SettingsShell description="Multi-location laboratory branches">
+      <div className="mb-4 flex justify-end">
+        <button type="button" onClick={() => setShowModal(true)} className="lims-btn-primary">
+          <Plus className="h-4 w-4" />
+          New Branch
+        </button>
+      </div>
+
       <div className="lims-card overflow-x-auto">
         <table className="lims-table">
           <thead>
@@ -38,6 +56,17 @@ export default function SettingsBranchesPage() {
           </tbody>
         </table>
       </div>
+
+      {showModal && (
+        <BranchFormModal
+          onClose={() => setShowModal(false)}
+          onSave={(data) => {
+            addBranch(data);
+            setShowModal(false);
+            refresh();
+          }}
+        />
+      )}
     </SettingsShell>
   );
 }

@@ -1,11 +1,19 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { PageHeader } from '@/components/lims/page-header';
-import { getAuditLogs } from '@/lib/data/store';
+import { getAuditLogs } from '@/lib/data/audit-store';
+import type { AuditLogEntry } from '@/lib/types/lims';
 import { formatDateTime } from '@/lib/utils';
 
 export default function AuditPage() {
-  const logs = getAuditLogs();
+  const [logs, setLogs] = useState<AuditLogEntry[]>([]);
+
+  const refresh = () => setLogs(getAuditLogs());
+
+  useEffect(() => {
+    refresh();
+  }, []);
 
   return (
     <div>

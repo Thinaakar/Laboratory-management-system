@@ -1,4 +1,5 @@
 import type { Patient, PatientType } from '@/lib/types/lims';
+import { logAuditAction } from '@/lib/audit/log-action';
 
 const STORAGE_KEY = 'labcore-patients-v1';
 
@@ -139,5 +140,10 @@ export function addPatient(input: {
 
   memoryPatients = [...patients, created];
   savePatients(memoryPatients);
+  logAuditAction({
+    action: 'CREATE',
+    module: 'patients',
+    details: `Registered ${created.id} — ${created.name}`,
+  });
   return created;
 }

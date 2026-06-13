@@ -1,15 +1,9 @@
-/** Operations section — single sidebar entry; in-page tabs for sub-routes. */
+/** @deprecated Operations moved under Settings → Stocks. Use settings-nav instead. */
 
-export const OPERATIONS_BASE = '/inventory';
+export {
+  SETTINGS_STOCKS_PATHS as OPERATIONS_PATHS,
+  isSettingsStocksPath as isOperationsPath,
+  LEGACY_OPERATIONS_REDIRECTS,
+} from './settings-nav';
 
-export const OPERATIONS_PATHS = [
-  '/inventory',
-  '/suppliers',
-  '/equipment',
-] as const;
-
-export function isOperationsPath(pathname: string): boolean {
-  return OPERATIONS_PATHS.some(
-    (p) => pathname === p || pathname.startsWith(`${p}/`),
-  );
-}
+export const OPERATIONS_BASE = '/settings/inventory';

@@ -10,7 +10,7 @@ interface SettingsShellProps {
 
 export function SettingsShell({
   children,
-  description = 'Lab profile, master data, and system preferences',
+  description = 'General settings, master data, and stocks',
 }: SettingsShellProps) {
   return (
     <div>

@@ -32,6 +32,7 @@ import {
 import { LabCoreLogo } from '@/components/lims/labcore-logo';
 import { LIMS_NAV } from '@/lib/navigation/modules';
 import { clearSession, getSession, type SessionUser } from '@/lib/auth/demo-users';
+import { logAuditAction } from '@/lib/audit/log-action';
 import { usePermissions } from '@/hooks/use-permissions';
 import { cn } from '@/lib/utils';
 
@@ -136,6 +137,15 @@ export function LimsSidebar() {
         <button
           type="button"
           onClick={() => {
+            if (session) {
+              logAuditAction({
+                action: 'LOGOUT',
+                module: 'auth',
+                details: 'User signed out',
+                userId: session.email,
+                userName: session.name,
+              });
+            }
             clearSession();
             window.location.href = '/login';
           }}

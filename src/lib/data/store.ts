@@ -1,13 +1,7 @@
 import type {
-  AuditLogEntry,
   DashboardKpis,
-  DoctorReferral,
-  HealthPackage,
-  LabTest,
   Sample,
-  TestDepartment,
   TestResult,
-  Branch,
 } from '@/lib/types/lims';
 import { seedPatients } from './patients-store';
 import { seedOrders, seedInvoices } from './orders-store';
@@ -23,21 +17,6 @@ function dateOffset(daysAgo: number, hour = 10, minute = 0): string {
 
 /** Samples per day for the last 7 days (index 0 = oldest, 6 = today) */
 const TREND_DAY_COUNTS = [5, 7, 6, 10, 8, 11, 9];
-
-export const seedDepartments: TestDepartment[] = [
-  { id: 'DEPT-HEM', name: 'Hematology', code: 'HEM' },
-  { id: 'DEPT-BIO', name: 'Biochemistry', code: 'BIO' },
-  { id: 'DEPT-MIC', name: 'Microbiology', code: 'MIC' },
-  { id: 'DEPT-SER', name: 'Serology', code: 'SER' },
-  { id: 'DEPT-PAT', name: 'Pathology', code: 'PAT' },
-];
-
-export const seedTests: LabTest[] = [
-  { id: 'TST-CBC', name: 'Complete Blood Count', departmentId: 'DEPT-HEM', departmentName: 'Hematology', price: 450, sampleType: 'Blood', turnaroundHours: 4, unit: 'cells/µL', referenceRange: '4.5–11.0', isActive: true },
-  { id: 'TST-FBS', name: 'Fasting Blood Sugar', departmentId: 'DEPT-BIO', departmentName: 'Biochemistry', price: 120, sampleType: 'Blood', turnaroundHours: 2, unit: 'mg/dL', referenceRange: '70–100', isActive: true },
-  { id: 'TST-LFT', name: 'Liver Function Test', departmentId: 'DEPT-BIO', departmentName: 'Biochemistry', price: 850, sampleType: 'Blood', turnaroundHours: 6, isActive: true },
-  { id: 'TST-TSH', name: 'Thyroid Profile (TSH)', departmentId: 'DEPT-SER', departmentName: 'Serology', price: 350, sampleType: 'Blood', turnaroundHours: 24, unit: 'mIU/L', referenceRange: '0.4–4.0', isActive: true },
-];
 
 function buildSeedSamples(): Sample[] {
   const statuses: Sample['status'][] = ['Registered', 'Collected', 'Received', 'Processing', 'Completed'];
@@ -311,35 +290,39 @@ export function getSampleTrendBars(): number[] {
 
 export function getSamples() { return seedSamples; }
 export function getResults() { return seedResults; }
-export function getTests() { return seedTests; }
-export function getDepartments() { return seedDepartments; }
 
-export const seedBranches: Branch[] = [
-  { id: 'BR-MAIN', name: 'Main Laboratory', code: 'MAIN', address: '123 Health Park, Mumbai', phone: '+91 22 4000 1234', isActive: true },
-];
+export {
+  seedAuditLogs,
+  getAuditLogs,
+  addAuditLog,
+} from './audit-store';
 
-export const seedPackages: HealthPackage[] = [
-  { id: 'PKG-BASIC', name: 'Basic Health Package', testIds: ['TST-CBC', 'TST-FBS'], price: 520, description: 'CBC + Fasting Blood Sugar' },
-  { id: 'PKG-EXEC', name: 'Executive Health Package', testIds: ['TST-CBC', 'TST-LFT', 'TST-TSH'], price: 1450, description: 'Comprehensive metabolic panel' },
-  { id: 'PKG-SENIOR', name: 'Senior Citizen Package', testIds: ['TST-CBC', 'TST-TSH', 'TST-FBS'], price: 890, description: 'CBC, thyroid, and fasting sugar' },
-  { id: 'PKG-DIABETES', name: 'Diabetes Package', testIds: ['TST-FBS', 'TST-CBC'], price: 520, description: 'Fasting blood sugar and CBC' },
-];
-
-export const seedReferrals: DoctorReferral[] = [
-  { id: 'REF-001', doctorName: 'Dr. Anil Kapoor', specialty: 'General Physician', phone: '+91 98765 33333', referralCount: 48, revenueGenerated: 125000 },
-  { id: 'REF-002', doctorName: 'Dr. Sunita Rao', specialty: 'Endocrinologist', phone: '+91 98765 44444', referralCount: 22, revenueGenerated: 78000 },
-];
-
-export const seedAuditLogs: AuditLogEntry[] = [
-  { id: 'AUD-001', userId: 'USR-RECEP', userName: 'Priya Sharma', action: 'CREATE', module: 'patients', timestamp: `${today}T08:30:00`, details: 'Registered PAT-000001' },
-  { id: 'AUD-002', userId: 'USR-LAB', userName: 'Arun Kumar', action: 'UPDATE', module: 'results', timestamp: `${today}T10:35:00`, details: 'Entered results for SMP-2026-0001' },
-  { id: 'AUD-003', userId: 'USR-ADMIN', userName: 'System Admin', action: 'LOGIN', module: 'auth', timestamp: `${today}T08:00:00`, ipAddress: '192.168.1.10' },
-];
-
-export function getBranches() { return seedBranches; }
-export function getPackages() { return seedPackages; }
-export function getReferrals() { return seedReferrals; }
-export function getAuditLogs() { return seedAuditLogs; }
+export {
+  seedDepartments,
+  getDepartments,
+  addDepartment,
+} from './departments-store';
+export {
+  seedTests,
+  getTests,
+  addTest,
+  SAMPLE_TYPE_OPTIONS,
+} from './tests-store';
+export {
+  seedPackages,
+  getPackages,
+  addPackage,
+} from './packages-store';
+export {
+  seedReferrals,
+  getReferrals,
+  addReferral,
+} from './referrals-store';
+export {
+  seedBranches,
+  getBranches,
+  addBranch,
+} from './branches-store';
 
 export {
   getOrders,

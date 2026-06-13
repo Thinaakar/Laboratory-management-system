@@ -47,17 +47,6 @@ export const LIMS_NAV: NavGroup[] = [
     items: WORKFLOW_STEPS,
   },
   {
-    title: 'Operations',
-    items: [
-      {
-        label: 'Operations',
-        href: '/inventory',
-        permissions: ['inventory.read', 'equipment.read'],
-        activePaths: ['/inventory', '/suppliers', '/equipment'],
-      },
-    ],
-  },
-  {
     title: 'Administration',
     items: [
       {
@@ -86,9 +75,15 @@ export const LIMS_NAV: NavGroup[] = [
           '/settings/departments',
           '/settings/doctors',
           '/settings/branches',
+          '/settings/inventory',
+          '/settings/suppliers',
+          '/settings/equipment',
           '/tests',
           '/tests/packages',
           '/admin/branches',
+          '/inventory',
+          '/suppliers',
+          '/equipment',
         ],
       },
     ],

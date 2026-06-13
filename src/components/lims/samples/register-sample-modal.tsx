@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 import { ModalPortal } from '@/components/lims/modal-portal';
 import { getOrders, getSamples } from '@/lib/data/store';
+import { logAuditAction } from '@/lib/audit/log-action';
 
 interface RegisterSampleModalProps {
   onClose: () => void;
@@ -45,6 +46,11 @@ export function RegisterSampleModal({ onClose, onSaved }: RegisterSampleModalPro
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!orderId || !collectedAt) return;
+    logAuditAction({
+      action: 'CREATE',
+      module: 'samples',
+      details: `Registered sample ${barcode} for order ${orderId}`,
+    });
     onSaved();
   };
 

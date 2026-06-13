@@ -1,4 +1,5 @@
 import type { LimsUser, UserRole } from '@/lib/types/lims';
+import { logAuditAction } from '@/lib/audit/log-action';
 
 const STORAGE_KEY = 'labcore-users-v1';
 
@@ -62,6 +63,11 @@ export function addUser(input: {
   };
   memoryUsers = [...users, created];
   saveUsers(memoryUsers);
+  logAuditAction({
+    action: 'CREATE',
+    module: 'users',
+    details: `Created user ${created.displayName} (${created.email})`,
+  });
   return created;
 }
 

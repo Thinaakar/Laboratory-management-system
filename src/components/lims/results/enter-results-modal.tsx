@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 import { ModalPortal } from '@/components/lims/modal-portal';
 import { getResults } from '@/lib/data/store';
+import { logAuditAction } from '@/lib/audit/log-action';
 
 interface EnterResultsModalProps {
   onClose: () => void;
@@ -39,6 +40,12 @@ export function EnterResultsModal({ onClose, onSaved }: EnterResultsModalProps) 
       return;
     }
 
+    const selected = results.find((r) => r.id === resultId);
+    logAuditAction({
+      action: 'UPDATE',
+      module: 'results',
+      details: `Entered result for ${selected?.testName ?? resultId}: ${value.trim()}${unit ? ` ${unit}` : ''}`,
+    });
     onSaved();
   };
 

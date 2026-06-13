@@ -2,10 +2,15 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { usePermissions } from '@/hooks/use-permissions';
+import {
+  isSettingsGeneralPath,
+  isSettingsMasterDataPath,
+  isSettingsStocksPath,
+} from '@/lib/navigation/settings-nav';
 import { cn } from '@/lib/utils';
 
-const TABS = [
-  { label: 'General', href: '/settings/general' },
+const MASTER_DATA_TABS = [
   { label: 'Tests', href: '/settings/tests' },
   { label: 'Packages', href: '/settings/packages' },
   { label: 'Departments', href: '/settings/departments' },
@@ -13,35 +18,106 @@ const TABS = [
   { label: 'Branches', href: '/settings/branches' },
 ];
 
+const STOCKS_TABS = [
+  { label: 'Inventory', href: '/settings/inventory', permission: 'inventory.read' },
+  { label: 'Suppliers', href: '/settings/suppliers', permission: 'inventory.read' },
+  { label: 'Equipment', href: '/settings/equipment', permission: 'equipment.read' },
+];
+
 function isTabActive(pathname: string, href: string): boolean {
-  if (href === '/settings/general') {
-    return pathname === '/settings' || pathname === '/settings/general';
-  }
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
 export function SettingsTabs() {
   const pathname = usePathname();
+  const { can } = usePermissions();
+
+  const visibleStockTabs = STOCKS_TABS.filter((tab) => can(tab.permission));
+  const stocksSectionHref = visibleStockTabs[0]?.href ?? '/settings/inventory';
+
+  const sections = [
+    {
+      label: 'General',
+      href: '/settings/general',
+      active: isSettingsGeneralPath(pathname),
+    },
+    {
+      label: 'Master Data',
+      href: '/settings/tests',
+      active: isSettingsMasterDataPath(pathname),
+    },
+    {
+      label: 'Stocks',
+      href: stocksSectionHref,
+      active: isSettingsStocksPath(pathname),
+    },
+  ];
+
+  const showMasterDataTabs = isSettingsMasterDataPath(pathname);
+  const showStocksTabs = isSettingsStocksPath(pathname) && visibleStockTabs.length > 0;
 
   return (
-    <div className="mb-6 flex flex-wrap gap-1 rounded-lg border border-muted-border bg-white p-1">
-      {TABS.map((tab) => {
-        const active = isTabActive(pathname, tab.href);
-        return (
+    <div className="mb-6 space-y-3">
+      <div className="flex flex-wrap gap-1 rounded-lg border border-muted-border bg-white p-1">
+        {sections.map((section) => (
           <Link
-            key={tab.href}
-            href={tab.href}
+            key={section.label}
+            href={section.href}
             className={cn(
               'rounded-md px-4 py-2 text-sm font-medium transition-colors',
-              active
+              section.active
                 ? 'bg-primary text-white shadow-sm'
                 : 'text-slate-600 hover:bg-muted-bg hover:text-slate-900',
             )}
           >
-            {tab.label}
+            {section.label}
           </Link>
-        );
-      })}
+        ))}
+      </div>
+
+      {showMasterDataTabs && (
+        <div className="flex flex-wrap gap-1 rounded-lg border border-muted-border bg-slate-50 p-1">
+          {MASTER_DATA_TABS.map((tab) => {
+            const active = isTabActive(pathname, tab.href);
+            return (
+              <Link
+                key={tab.href}
+                href={tab.href}
+                className={cn(
+                  'rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
+                  active
+                    ? 'bg-white text-primary shadow-sm ring-1 ring-muted-border'
+                    : 'text-slate-600 hover:bg-white hover:text-slate-900',
+                )}
+              >
+                {tab.label}
+              </Link>
+            );
+          })}
+        </div>
+      )}
+
+      {showStocksTabs && (
+        <div className="flex flex-wrap gap-1 rounded-lg border border-muted-border bg-slate-50 p-1">
+          {visibleStockTabs.map((tab) => {
+            const active = isTabActive(pathname, tab.href);
+            return (
+              <Link
+                key={tab.href}
+                href={tab.href}
+                className={cn(
+                  'rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
+                  active
+                    ? 'bg-white text-primary shadow-sm ring-1 ring-muted-border'
+                    : 'text-slate-600 hover:bg-white hover:text-slate-900',
+                )}
+              >
+                {tab.label}
+              </Link>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

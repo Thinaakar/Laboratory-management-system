@@ -1,15 +1,37 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+import { Plus } from 'lucide-react';
 import { SettingsShell } from '@/components/lims/settings/settings-shell';
-import { getPackages, getTests } from '@/lib/data/store';
+import { PackageFormModal } from '@/components/lims/settings/package-form-modal';
+import { addPackage, getPackages } from '@/lib/data/packages-store';
+import { getTests } from '@/lib/data/tests-store';
 import { formatCurrency } from '@/lib/utils';
+import type { HealthPackage } from '@/lib/types/lims';
 
 export default function SettingsPackagesPage() {
-  const packages = getPackages();
-  const tests = getTests();
+  const [packages, setPackages] = useState<HealthPackage[]>([]);
+  const [tests, setTests] = useState(getTests());
+  const [showModal, setShowModal] = useState(false);
+
+  const refresh = () => {
+    setPackages(getPackages());
+    setTests(getTests());
+  };
+
+  useEffect(() => {
+    refresh();
+  }, []);
 
   return (
     <SettingsShell description="Health packages — bundled tests and package pricing">
+      <div className="mb-4 flex justify-end">
+        <button type="button" onClick={() => setShowModal(true)} className="lims-btn-primary">
+          <Plus className="h-4 w-4" />
+          New Package
+        </button>
+      </div>
+
       <div className="lims-card overflow-x-auto">
         <table className="lims-table">
           <thead>
@@ -36,6 +58,17 @@ export default function SettingsPackagesPage() {
           </tbody>
         </table>
       </div>
+
+      {showModal && (
+        <PackageFormModal
+          onClose={() => setShowModal(false)}
+          onSave={(data) => {
+            addPackage(data);
+            setShowModal(false);
+            refresh();
+          }}
+        />
+      )}
     </SettingsShell>
   );
 }

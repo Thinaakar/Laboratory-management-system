@@ -1,4 +1,5 @@
 import type { Invoice, LabOrder, OrderPriority } from '@/lib/types/lims';
+import { logAuditAction } from '@/lib/audit/log-action';
 
 const ORDERS_KEY = 'labcore-orders-v1';
 const INVOICES_KEY = 'labcore-invoices-v1';
@@ -173,6 +174,11 @@ export function addOrder(input: {
   };
   memoryOrders = [...orders, created];
   saveOrders(memoryOrders);
+  logAuditAction({
+    action: 'CREATE',
+    module: 'billing',
+    details: `Created order ${created.id} for ${created.patientName}`,
+  });
   return created;
 }
 
@@ -195,5 +201,10 @@ export function addInvoice(input: {
   };
   memoryInvoices = [...invoices, created];
   saveInvoices(memoryInvoices);
+  logAuditAction({
+    action: 'CREATE',
+    module: 'billing',
+    details: `Created invoice ${created.id} for ${created.patientName}`,
+  });
   return created;
 }

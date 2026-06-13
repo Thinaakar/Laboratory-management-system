@@ -51,11 +51,11 @@ export function AnalyticsPieChart({ data, title, subtitle, className }: Analytic
   const activeSlice = data.find((d) => d.label === active);
 
   return (
-    <div className={cn('lims-card p-5', className)}>
+    <div className={cn('lims-card p-4', className)}>
       <h2 className="text-sm font-semibold text-slate-900">{title}</h2>
-      {subtitle && <p className="mt-1 text-xs text-muted">{subtitle}</p>}
+      {subtitle && <p className="mt-0.5 text-xs text-muted">{subtitle}</p>}
 
-      <div className="mt-4 flex flex-col items-center gap-4 sm:flex-row sm:items-center">
+      <div className="mt-3 flex flex-col items-center gap-4 sm:flex-row sm:items-center">
         <div className="relative shrink-0">
           <svg viewBox="0 0 160 160" className="h-40 w-40">
             {total === 0 ? (

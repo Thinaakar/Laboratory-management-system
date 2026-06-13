@@ -4,10 +4,11 @@ import { Plus } from 'lucide-react';
 import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { CollectPaymentModal } from '@/components/lims/billing/collect-payment-modal';
+import { DataTable } from '@/components/lims/data-table';
 import { PageHeader } from '@/components/lims/page-header';
 import { FlashBanner } from '@/components/lims/flash-banner';
 import { StatusBadge, statusVariant } from '@/components/lims/status-badge';
-import { HydrationSafeInput } from '@/components/lims/client-only';
+import { defaultStringSort, useDataTable } from '@/hooks/use-data-table';
 import { getInvoices } from '@/lib/data/store';
 import type { Invoice } from '@/lib/types/lims';
 import { formatCurrency, formatDateTime } from '@/lib/utils';
@@ -17,6 +18,7 @@ function BillingContent() {
   const searchParams = useSearchParams();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
   const [showModal, setShowModal] = useState(false);
   const [initialInvoiceId, setInitialInvoiceId] = useState<string | undefined>();
 
@@ -36,19 +38,136 @@ function BillingContent() {
     }
   }, [searchParams]);
 
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return invoices;
-    return invoices.filter(
-      (inv) =>
-        inv.id.toLowerCase().includes(q) ||
-        inv.orderId.toLowerCase().includes(q) ||
-        inv.patientId.toLowerCase().includes(q) ||
-        inv.patientName.toLowerCase().includes(q) ||
-        inv.status.toLowerCase().includes(q) ||
-        inv.paymentMethod?.toLowerCase().includes(q),
+  const filteredData = useMemo(() => {
+    return invoices.filter((inv) => statusFilter === 'all' || inv.status === statusFilter);
+  }, [invoices, statusFilter]);
+
+  const searchFilter = useCallback((inv: Invoice, q: string) => {
+    return (
+      inv.id.toLowerCase().includes(q) ||
+      inv.orderId.toLowerCase().includes(q) ||
+      inv.patientId.toLowerCase().includes(q) ||
+      inv.patientName.toLowerCase().includes(q) ||
+      inv.status.toLowerCase().includes(q) ||
+      (inv.paymentMethod?.toLowerCase().includes(q) ?? false)
     );
-  }, [invoices, search]);
+  }, []);
+
+  const sortFn = useCallback((a: Invoice, b: Invoice, key: string, dir: 'asc' | 'desc') => {
+    const accessor = (inv: Invoice, k: string) => {
+      switch (k) {
+        case 'id':
+          return inv.id;
+        case 'orderId':
+          return inv.orderId;
+        case 'patient':
+          return inv.patientName;
+        case 'patientId':
+          return inv.patientId;
+        case 'amount':
+          return inv.amount;
+        case 'paid':
+          return inv.paidAmount;
+        case 'due':
+          return inv.amount - inv.paidAmount;
+        case 'method':
+          return inv.paymentMethod ?? '';
+        case 'status':
+          return inv.status;
+        case 'created':
+          return inv.createdAt;
+        default:
+          return '';
+      }
+    };
+    return defaultStringSort(a, b, key, dir, accessor);
+  }, []);
+
+  const table = useDataTable({
+    data: filteredData,
+    searchQuery: search,
+    searchFilter,
+    sortFn,
+    pageSize: 10,
+  });
+
+  const columns = useMemo(
+    () => [
+      {
+        key: 'id',
+        header: 'Invoice ID',
+        sortable: true,
+        className: 'font-mono text-xs text-slate-600',
+        render: (inv: Invoice) => inv.id,
+      },
+      {
+        key: 'orderId',
+        header: 'Order ID',
+        sortable: true,
+        className: 'font-mono text-xs text-slate-600',
+        render: (inv: Invoice) => inv.orderId,
+      },
+      {
+        key: 'patient',
+        header: 'Patient',
+        sortable: true,
+        className: 'font-medium text-slate-900',
+        render: (inv: Invoice) => inv.patientName,
+      },
+      {
+        key: 'patientId',
+        header: 'Patient ID',
+        sortable: true,
+        className: 'font-mono text-xs text-slate-600',
+        render: (inv: Invoice) => inv.patientId,
+      },
+      {
+        key: 'amount',
+        header: 'Amount',
+        sortable: true,
+        render: (inv: Invoice) => formatCurrency(inv.amount),
+      },
+      {
+        key: 'paid',
+        header: 'Paid',
+        sortable: true,
+        render: (inv: Invoice) => formatCurrency(inv.paidAmount),
+      },
+      {
+        key: 'due',
+        header: 'Due',
+        sortable: true,
+        render: (inv: Invoice) => {
+          const due = inv.amount - inv.paidAmount;
+          return <span className={due > 0 ? 'font-medium text-slate-900' : ''}>{formatCurrency(due)}</span>;
+        },
+      },
+      {
+        key: 'method',
+        header: 'Method',
+        sortable: true,
+        render: (inv: Invoice) => inv.paymentMethod ?? '—',
+      },
+      {
+        key: 'status',
+        header: 'Status',
+        sortable: true,
+        render: (inv: Invoice) => <StatusBadge label={inv.status} variant={statusVariant(inv.status)} />,
+      },
+      {
+        key: 'created',
+        header: 'Created',
+        sortable: true,
+        render: (inv: Invoice) => formatDateTime(inv.createdAt),
+      },
+    ],
+    [],
+  );
+
+  const statusOptions = useMemo(() => {
+    const statuses = [...new Set(invoices.map((i) => i.status))];
+    return statuses.sort();
+  }, [invoices]);
 
   return (
     <>
@@ -72,69 +191,46 @@ function BillingContent() {
 
       <FlashBanner />
 
-      <div className="lims-card overflow-hidden">
-        <div className="border-b border-muted-border bg-muted-bg/40 px-5 py-4">
-          <HydrationSafeInput
-            type="search"
-            className="lims-input max-w-sm bg-white"
-            placeholder="Search by invoice, order, patient, or status…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="lims-table">
-            <thead>
-              <tr>
-                <th>Invoice ID</th>
-                <th>Order ID</th>
-                <th>Patient</th>
-                <th>Patient ID</th>
-                <th>Amount</th>
-                <th>Paid</th>
-                <th>Due</th>
-                <th>Method</th>
-                <th>Status</th>
-                <th>Created</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.length === 0 ? (
-                <tr>
-                  <td colSpan={10} className="py-10 text-center text-sm text-muted">
-                    {invoices.length === 0
-                      ? 'No invoices found. Collect payment to get started.'
-                      : 'No invoices match your search.'}
-                  </td>
-                </tr>
-              ) : (
-                filtered.map((inv) => {
-                  const due = inv.amount - inv.paidAmount;
-                  return (
-                    <tr key={inv.id}>
-                      <td className="font-mono text-xs">{inv.id}</td>
-                      <td className="font-mono text-xs">{inv.orderId}</td>
-                      <td className="font-medium text-slate-900">{inv.patientName}</td>
-                      <td className="font-mono text-xs">{inv.patientId}</td>
-                      <td>{formatCurrency(inv.amount)}</td>
-                      <td>{formatCurrency(inv.paidAmount)}</td>
-                      <td className={due > 0 ? 'font-medium text-slate-900' : ''}>
-                        {formatCurrency(due)}
-                      </td>
-                      <td>{inv.paymentMethod ?? '—'}</td>
-                      <td>
-                        <StatusBadge label={inv.status} variant={statusVariant(inv.status)} />
-                      </td>
-                      <td>{formatDateTime(inv.createdAt)}</td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <DataTable
+        columns={columns}
+        data={table.rows}
+        rowKey={(inv) => inv.id}
+        emptyMessage={
+          invoices.length === 0
+            ? 'No invoices found. Collect payment to get started.'
+            : 'No invoices match your filters.'
+        }
+        search={{
+          value: search,
+          onChange: setSearch,
+          placeholder: 'Search by invoice, order, patient, or status…',
+        }}
+        filters={
+          <select
+            className="lims-input h-9 w-auto min-w-[8rem] text-xs"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
+            <option value="all">All statuses</option>
+            {statusOptions.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
+        }
+        sortKey={table.sortKey}
+        sortDir={table.sortDir}
+        onSort={table.toggleSort}
+        pagination={{
+          page: table.page,
+          pageSize: table.pageSize,
+          totalItems: table.totalItems,
+          totalPages: table.totalPages,
+          onPageChange: table.setPage,
+          onPageSizeChange: table.setPageSize,
+        }}
+      />
 
       {showModal && (
         <CollectPaymentModal
@@ -153,10 +249,8 @@ function BillingContent() {
 
 export default function BillingPage() {
   return (
-    <div>
-      <Suspense fallback={null}>
-        <BillingContent />
-      </Suspense>
-    </div>
+    <Suspense fallback={null}>
+      <BillingContent />
+    </Suspense>
   );
 }

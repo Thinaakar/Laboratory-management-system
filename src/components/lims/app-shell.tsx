@@ -13,10 +13,12 @@ export function LimsAppShell({ children }: { children: React.ReactNode }) {
   }, [router]);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-muted-bg">
+    <div className="lims-app flex h-screen overflow-hidden bg-[#f4f6f9]">
       <LimsSidebar />
       <main className="min-h-0 flex-1 overflow-y-auto" suppressHydrationWarning>
-        <div className="mx-auto max-w-7xl p-6" suppressHydrationWarning>{children}</div>
+        <div className="mx-auto w-full max-w-[1600px] px-4 py-4 lg:px-5 lg:py-5" suppressHydrationWarning>
+          {children}
+        </div>
       </main>
     </div>
   );

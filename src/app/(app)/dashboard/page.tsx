@@ -43,7 +43,7 @@ export default function DashboardPage() {
         sampleTrend={sampleTrend}
       />
 
-      <div className="mt-6 grid gap-4 lg:grid-cols-2">
+      <div className="mt-4 grid gap-4 lg:grid-cols-2">
         <AnalyticsPieChart
           title="Sample Pipeline"
           subtitle="Samples by processing stage"
@@ -51,11 +51,9 @@ export default function DashboardPage() {
         />
 
         <div className="space-y-4">
-          <div className="lims-card p-5">
-            <h2 className="text-sm font-semibold text-slate-900">
-              Quick Actions
-            </h2>
-            <div className="mt-3 flex flex-wrap gap-2">
+          <div className="lims-card p-4">
+            <h2 className="text-sm font-semibold text-slate-900">Quick Actions</h2>
+            <div className="mt-2.5 flex flex-wrap gap-2">
               {QUICK_ACTIONS.map((action) => (
                 <Link
                   key={action.label}
@@ -68,11 +66,9 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="lims-card p-5">
-            <h2 className="text-sm font-semibold text-slate-900">
-              Today&apos;s Summary
-            </h2>
-            <dl className="mt-3 space-y-2 text-sm">
+          <div className="lims-card p-4">
+            <h2 className="text-sm font-semibold text-slate-900">Today&apos;s Summary</h2>
+            <dl className="mt-2.5 space-y-2 text-sm">
               <div className="flex justify-between border-b border-muted-border/60 pb-2">
                 <dt className="text-muted">Samples collected</dt>
                 <dd className="font-medium text-slate-900">

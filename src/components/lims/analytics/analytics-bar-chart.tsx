@@ -31,11 +31,11 @@ export function AnalyticsBarChart({
     valueFormat === 'currency' ? formatCurrency(v) : v.toLocaleString('en-IN');
 
   return (
-    <div className={cn('lims-card p-5', className)}>
+    <div className={cn('lims-card p-4', className)}>
       <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className="text-sm font-semibold text-slate-900">{title}</h2>
-          {subtitle && <p className="mt-1 text-xs text-muted">{subtitle}</p>}
+          {subtitle && <p className="mt-0.5 text-xs text-muted">{subtitle}</p>}
         </div>
         <div className="text-right">
           <p className="text-[10px] font-medium uppercase tracking-wide text-muted">Total</p>
@@ -43,8 +43,8 @@ export function AnalyticsBarChart({
         </div>
       </div>
 
-      <div className="mt-5">
-        <div className="flex h-[148px] items-end justify-between gap-1.5 sm:gap-2">
+      <div className="mt-3">
+        <div className="flex h-[120px] items-end justify-between gap-1.5 sm:gap-2">
           {data.map((item) => {
             const barPx = Math.max(12, Math.round((item.value / max) * barAreaHeight));
             return (
@@ -57,7 +57,7 @@ export function AnalyticsBarChart({
                     {formatValue(item.value)}
                   </span>
                   <div
-                    className="w-full rounded-t-md bg-gradient-to-t from-primary to-primary/25 transition-all hover:from-primary-500 hover:to-primary/40"
+                    className="w-full rounded-t bg-primary/80 transition-colors hover:bg-primary"
                     style={{ height: `${barPx}px` }}
                     title={`${item.label}: ${formatValue(item.value)}`}
                   />

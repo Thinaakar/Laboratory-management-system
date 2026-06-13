@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 import { ModalPortal } from '@/components/lims/modal-portal';
+import { FormField, FormGrid } from '@/components/lims/form-field';
 import type { Patient, PatientType } from '@/lib/types/lims';
 import {
   addPatient,
@@ -99,10 +100,10 @@ export function PatientRegistrationModal({ onClose, onSaved }: PatientRegistrati
     <div className="fixed inset-0 z-[100] overflow-y-auto bg-black/40 p-4 sm:p-6">
       <div className="flex min-h-full items-end justify-center sm:items-center">
         <div className="lims-surface flex w-full max-w-2xl max-h-[calc(100vh-2rem)] flex-col overflow-hidden sm:max-h-[min(92vh,calc(100vh-3rem))]">
-          <div className="flex shrink-0 items-start justify-between border-b border-muted-border px-6 py-4">
+          <div className="lims-dialog-header">
             <div>
-              <h3 className="text-lg font-semibold text-slate-900">Register Patient</h3>
-              <p className="mt-1 text-sm text-muted">Add a new patient to the laboratory registry</p>
+              <h3 className="text-base font-semibold text-slate-900">Register Patient</h3>
+              <p className="mt-0.5 text-sm text-muted">Add a new patient to the laboratory registry</p>
             </div>
             <button
               type="button"
@@ -115,55 +116,49 @@ export function PatientRegistrationModal({ onClose, onSaved }: PatientRegistrati
           </div>
 
           <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col" suppressHydrationWarning>
-            <div className="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain px-6 py-5">
+            <div className="lims-dialog-body">
           {error && (
             <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
               {error}
             </p>
           )}
 
-          <div>
-            <label className="mb-1 block text-xs font-medium text-muted">Patient ID</label>
+          <FormField label="Patient ID" hint="Assigned automatically when you save.">
             <input
-              className="lims-input cursor-not-allowed bg-muted-bg font-mono text-sm text-slate-600"
+              className="lims-input cursor-not-allowed bg-slate-50 font-mono text-sm text-slate-600"
               value={mounted ? patientId : ''}
               readOnly
               tabIndex={-1}
               placeholder="Auto-generating…"
               aria-readonly="true"
             />
-            <p className="mt-1 text-xs text-muted">Assigned automatically when you save.</p>
-          </div>
+          </FormField>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label className="mb-1 block text-xs font-medium text-muted">
-                First Name <span className="text-error">*</span>
-              </label>
+          <FormGrid>
+            <FormField label="First Name" required htmlFor="patient-first-name">
               <input
+                id="patient-first-name"
                 className="lims-input"
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
                 required
                 placeholder="First name"
               />
-            </div>
-            <div>
-              <label className="mb-1 block text-xs font-medium text-muted">Last Name</label>
+            </FormField>
+            <FormField label="Last Name" htmlFor="patient-last-name">
               <input
+                id="patient-last-name"
                 className="lims-input"
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
                 placeholder="Last name"
               />
-            </div>
-          </div>
+            </FormField>
+          </FormGrid>
 
-          <div>
-            <label className="mb-1 block text-xs font-medium text-muted">
-              Gender <span className="text-error">*</span>
-            </label>
+          <FormField label="Gender" required htmlFor="patient-gender">
             <select
+              id="patient-gender"
               className="lims-input"
               value={gender}
               onChange={(e) => setGender(e.target.value as 'Male' | 'Female' | 'Other')}
@@ -173,21 +168,21 @@ export function PatientRegistrationModal({ onClose, onSaved }: PatientRegistrati
               <option value="Female">Female</option>
               <option value="Other">Other</option>
             </select>
-          </div>
+          </FormField>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label className="mb-1 block text-xs font-medium text-muted">DOB</label>
+          <FormGrid>
+            <FormField label="Date of Birth" htmlFor="patient-dob">
               <input
+                id="patient-dob"
                 className="lims-input"
                 type="date"
                 value={dateOfBirth}
                 onChange={(e) => handleDobChange(e.target.value)}
               />
-            </div>
-            <div>
-              <label className="mb-1 block text-xs font-medium text-muted">Age</label>
+            </FormField>
+            <FormField label="Age" htmlFor="patient-age">
               <input
+                id="patient-age"
                 className="lims-input"
                 type="number"
                 min={0}
@@ -196,49 +191,47 @@ export function PatientRegistrationModal({ onClose, onSaved }: PatientRegistrati
                 onChange={(e) => setAge(e.target.value)}
                 placeholder="Years"
               />
-            </div>
-          </div>
+            </FormField>
+          </FormGrid>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label className="mb-1 block text-xs font-medium text-muted">
-                Mobile Number <span className="text-error">*</span>
-              </label>
+          <FormGrid>
+            <FormField label="Mobile Number" required htmlFor="patient-phone">
               <input
+                id="patient-phone"
                 className="lims-input"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 required
                 placeholder="+91 …"
               />
-            </div>
-            <div>
-              <label className="mb-1 block text-xs font-medium text-muted">Email (optional)</label>
+            </FormField>
+            <FormField label="Email" optional htmlFor="patient-email">
               <input
+                id="patient-email"
                 className="lims-input"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="name@email.com"
               />
-            </div>
-          </div>
+            </FormField>
+          </FormGrid>
 
-          <div>
-            <label className="mb-1 block text-xs font-medium text-muted">Address</label>
+          <FormField label="Address" htmlFor="patient-address">
             <textarea
+              id="patient-address"
               className="lims-input"
               rows={3}
               value={address}
               onChange={(e) => setAddress(e.target.value)}
               placeholder="Street, city, pin code"
             />
-          </div>
+          </FormField>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label className="mb-1 block text-xs font-medium text-muted">Referred Doctor</label>
+          <FormGrid>
+            <FormField label="Referred Doctor" htmlFor="patient-referral">
               <select
+                id="patient-referral"
                 className="lims-input"
                 value={referredDoctor}
                 onChange={(e) => setReferredDoctor(e.target.value)}
@@ -250,10 +243,10 @@ export function PatientRegistrationModal({ onClose, onSaved }: PatientRegistrati
                   </option>
                 ))}
               </select>
-            </div>
-            <div>
-              <label className="mb-1 block text-xs font-medium text-muted">Patient Type</label>
+            </FormField>
+            <FormField label="Patient Type" htmlFor="patient-type">
               <select
+                id="patient-type"
                 className="lims-input"
                 value={patientType}
                 onChange={(e) => setPatientType(e.target.value as PatientType)}
@@ -264,12 +257,12 @@ export function PatientRegistrationModal({ onClose, onSaved }: PatientRegistrati
                   </option>
                 ))}
               </select>
-            </div>
-          </div>
+            </FormField>
+          </FormGrid>
 
             </div>
 
-            <div className="flex shrink-0 justify-end gap-3 border-t border-muted-border bg-white px-6 py-4">
+            <div className="lims-dialog-footer">
               <button type="button" onClick={onClose} className="lims-btn-secondary">
                 Cancel
               </button>

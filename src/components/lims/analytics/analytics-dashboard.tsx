@@ -11,11 +11,12 @@ import {
   Users,
   Wallet,
 } from 'lucide-react';
+import { KpiCard } from '@/components/lims/kpi-card';
 import { AnalyticsBarChart } from '@/components/lims/analytics/analytics-bar-chart';
 import { AnalyticsPieChart } from '@/components/lims/analytics/analytics-pie-chart';
 import { useClientData } from '@/hooks/use-hydrated';
 import { getAnalyticsSnapshot } from '@/lib/data/analytics';
-import { cn, formatCurrency } from '@/lib/utils';
+import { formatCurrency } from '@/lib/utils';
 
 interface KpiDef {
   label: string;
@@ -98,23 +99,20 @@ export function AnalyticsDashboard() {
 
   return (
     <div>
-      <div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {kpiCards.map((k) => (
-          <div
+          <KpiCard
             key={k.label}
-            className="lims-card p-4"
-          >
-            <div className={cn('inline-flex rounded-lg p-2', k.color)}>
-              <k.icon size={18} />
-            </div>
-            <p className="mt-2 text-xs font-medium text-muted">{k.label}</p>
-            <p className="text-xl font-bold text-slate-900">{k.value}</p>
-            {k.sub && <p className="mt-0.5 text-xs text-muted">{k.sub}</p>}
-          </div>
+            label={k.label}
+            value={k.value}
+            icon={k.icon}
+            iconClassName={k.color}
+            sub={k.sub}
+          />
         ))}
       </div>
 
-      <div className="mb-6 grid gap-4 lg:grid-cols-2">
+      <div className="mb-4 grid gap-4 lg:grid-cols-2">
         <AnalyticsBarChart
           title="Sample Volume"
           subtitle="Samples registered — last 7 days"
@@ -128,7 +126,7 @@ export function AnalyticsDashboard() {
         />
       </div>
 
-      <div className="mb-6 grid gap-4 lg:grid-cols-2">
+      <div className="mb-4 grid gap-4 lg:grid-cols-2">
         <AnalyticsBarChart
           title="Top Tests by Orders"
           subtitle="Most ordered tests in the lab"
@@ -141,7 +139,7 @@ export function AnalyticsDashboard() {
         />
       </div>
 
-      <div className="mb-6 grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+      <div className="mb-4 grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
         <AnalyticsPieChart
           title="Payment Status"
           subtitle="Invoice collection overview"
@@ -165,10 +163,10 @@ export function AnalyticsDashboard() {
           subtitle="Order volume across departments"
           data={data.departmentMix}
         />
-        <div className="lims-card p-5">
+        <div className="lims-card p-4">
           <h2 className="text-sm font-semibold text-slate-900">Operations Summary</h2>
-          <p className="mt-1 text-xs text-muted">Key metrics at a glance</p>
-          <dl className="mt-4 grid gap-3 sm:grid-cols-2">
+          <p className="mt-0.5 text-xs text-muted">Key metrics at a glance</p>
+          <dl className="mt-3 grid gap-2.5 sm:grid-cols-2">
             {[
               { label: 'Patients registered', value: kpis.totalPatients },
               { label: 'Samples processed', value: kpis.totalSamples },
@@ -181,7 +179,7 @@ export function AnalyticsDashboard() {
             ].map((row) => (
               <div
                 key={row.label}
-                className="rounded-lg border border-muted-border/60 bg-muted-bg/40 px-3 py-2.5"
+                className="rounded-md border border-slate-100 bg-slate-50/80 px-3 py-2"
               >
                 <dt className="text-xs text-muted">{row.label}</dt>
                 <dd className="mt-0.5 text-lg font-semibold text-slate-900">{row.value}</dd>

@@ -87,14 +87,14 @@ export function LimsSidebar() {
   }, []);
 
   return (
-    <aside className="lims-sidebar flex h-full w-60 shrink-0 flex-col border-r border-white/10">
-      <div className="border-b border-white/10 px-4 py-4">
+    <aside className="lims-sidebar flex h-full w-[15.5rem] shrink-0 flex-col border-r border-white/[0.06]">
+      <div className="border-b border-white/[0.06] px-3.5 py-3.5">
         <Link href="/dashboard" className="inline-flex">
           <LabCoreLogo size="md" priority />
         </Link>
       </div>
 
-      <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-4">
+      <nav className="flex-1 space-y-3 overflow-y-auto px-2 py-2.5">
         {LIMS_NAV.map((group) => {
           const items = group.items.filter((item) => {
             if (item.permissions?.length) {
@@ -107,7 +107,7 @@ export function LimsSidebar() {
           return (
             <div key={group.title}>
               {showGroupTitle && (
-                <p className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                <p className="mb-1 px-2.5 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
                   {group.title}
                 </p>
               )}
@@ -134,7 +134,7 @@ export function LimsSidebar() {
         })}
       </nav>
 
-      <div className="border-t border-white/10 p-3">
+      <div className="border-t border-white/[0.06] p-2.5">
         <p className="truncate px-2 text-xs font-medium text-white">{session?.name ?? 'User'}</p>
         <p className="truncate px-2 text-[10px] text-slate-400">{session?.role ?? ''}</p>
         <button

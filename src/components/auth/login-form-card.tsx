@@ -11,7 +11,7 @@ const REMEMBER_KEY = 'labcore-remember-email';
 
 export function LoginFormCard() {
   const router = useRouter();
-  const [email, setEmail] = useState('admin@labcore.io');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [remember, setRemember] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -143,7 +143,7 @@ export function LoginFormCard() {
         <form onSubmit={handleSubmit} className="mt-6 space-y-5">
           <div>
             <label htmlFor="login-email" className="mb-1.5 block text-sm font-medium text-slate-700">
-              Work Email
+              Email
             </label>
             <input
               id="login-email"

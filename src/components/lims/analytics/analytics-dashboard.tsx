@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { LucideIcon } from "lucide-react";
 import {
   Activity,
+  Download,
   TestTube2,
   TrendingUp,
   Users,
@@ -13,10 +14,12 @@ import { AnalyticsBarChart } from "@/components/lims/analytics/analytics-bar-cha
 import { AnalyticsPieChart } from "@/components/lims/analytics/analytics-pie-chart";
 import {
   ANALYTICS_PERIODS,
+  analyticsSnapshotCsvRows,
   getAnalyticsSnapshot,
   getAnalyticsTrendSubtitle,
   type AnalyticsPeriod,
 } from "@/lib/data/analytics";
+import { downloadCsv } from "@/lib/utils/csv";
 import { cn, formatCurrency } from "@/lib/utils";
 
 interface KpiDef {
@@ -98,28 +101,44 @@ export function AnalyticsDashboard() {
 
   const { kpis } = data;
 
+  const handleExportCsv = () => {
+    const rows = analyticsSnapshotCsvRows(data);
+    if (!rows.length) return;
+    downloadCsv(`analytics-${period}`, rows);
+  };
+
   return (
     <div>
-      <div className="mb-4 flex flex-wrap gap-1 rounded-lg border border-muted-border bg-white p-1">
-        {ANALYTICS_PERIODS.map((option) => {
-          const active = period === option.id;
-          return (
-            <button
-              key={option.id}
-              type="button"
-              onClick={() => setPeriod(option.id)}
-              className={cn(
-                "rounded-md px-4 py-2 text-sm font-medium transition-colors",
-                active
-                  ? "bg-primary text-white shadow-sm"
-                  : "text-slate-600 hover:bg-muted-bg hover:text-slate-900",
-              )}
-              title={option.description}
-            >
-              {option.label}
-            </button>
-          );
-        })}
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap gap-1 rounded-lg border border-muted-border bg-white p-1">
+          {ANALYTICS_PERIODS.map((option) => {
+            const active = period === option.id;
+            return (
+              <button
+                key={option.id}
+                type="button"
+                onClick={() => setPeriod(option.id)}
+                className={cn(
+                  "rounded-md px-4 py-2 text-sm font-medium transition-colors",
+                  active
+                    ? "bg-primary text-white shadow-sm"
+                    : "text-slate-600 hover:bg-muted-bg hover:text-slate-900",
+                )}
+                title={option.description}
+              >
+                {option.label}
+              </button>
+            );
+          })}
+        </div>
+        <button
+          type="button"
+          onClick={handleExportCsv}
+          className="lims-btn-primary"
+        >
+          <Download className="h-4 w-4" />
+          Export CSV
+        </button>
       </div>
 
       <p className="mb-4 text-sm text-muted">

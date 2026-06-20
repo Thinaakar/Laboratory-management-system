@@ -327,6 +327,54 @@ export function getAnalyticsTrendSubtitle(period: AnalyticsPeriod): string {
   return periodTrendSubtitle(period);
 }
 
+export function analyticsSnapshotCsvRows(
+  snapshot: AnalyticsSnapshot,
+): Record<string, string | number>[] {
+  const rows: Record<string, string | number>[] = [];
+  const { kpis } = snapshot;
+
+  const push = (section: string, label: string, value: string | number) => {
+    rows.push({ Section: section, Label: label, Value: value });
+  };
+
+  push("Report", "Period", snapshot.periodLabel);
+
+  [
+    ["Patients registered", kpis.totalPatients],
+    ["Samples processed", kpis.totalSamples],
+    ["Lab orders", kpis.totalOrders],
+    ["Revenue collected", kpis.periodRevenue],
+    ["Pending approvals", kpis.pendingTests],
+    ["Reports approved", kpis.completedReports],
+    ["Outstanding dues", kpis.outstandingPayments],
+    ["Appointments", kpis.periodAppointments],
+    ["Active staff", kpis.activeStaff],
+    ["Low stock alerts", kpis.lowStockItems],
+  ].forEach(([label, value]) => push("KPIs", label as string, value as number));
+
+  snapshot.sampleTrend.forEach((item) =>
+    push("Sample Volume", item.label, item.value),
+  );
+  snapshot.revenueTrend.forEach((item) =>
+    push("Revenue Collected", item.label, item.value),
+  );
+  snapshot.topTests.forEach((item) => push("Top Tests", item.label, item.value));
+  snapshot.paymentStatus.forEach((item) =>
+    push("Payment Status", item.label, item.value),
+  );
+  snapshot.sampleStatus.forEach((item) =>
+    push("Sample Pipeline", item.label, item.value),
+  );
+  snapshot.testStatus.forEach((item) =>
+    push("Tests by Status", item.label, item.value),
+  );
+  snapshot.departmentMix.forEach((item) =>
+    push("Tests by Department", item.label, item.value),
+  );
+
+  return rows;
+}
+
 /** @deprecated Use getAnalyticsSnapshot(period) */
 export function getAnalyticsOverview(period: AnalyticsPeriod = "overall"): AnalyticsSnapshot {
   return getAnalyticsSnapshot(period);

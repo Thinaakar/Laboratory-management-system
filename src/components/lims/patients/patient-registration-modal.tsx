@@ -6,14 +6,13 @@ import { ModalPortal } from "@/components/lims/modal-portal";
 import { FormField, FormGrid } from "@/components/lims/form-field";
 import type { BloodGroup, Patient, PatientType } from "@/lib/types/lims";
 import {
-  addPatient,
   BLOOD_GROUP_OPTIONS,
   calculateAgeFromDob,
   getNextPatientId,
   PATIENT_TYPE_OPTIONS,
-  updatePatient,
 } from "@/lib/data/patients-store";
 import { getReferrals } from "@/lib/data/store";
+import { getLimsData } from "@/lib/api/use-lims-data";
 
 interface PatientRegistrationModalProps {
   onClose: () => void;
@@ -41,6 +40,7 @@ export function PatientRegistrationModal({
   const [referredDoctor, setReferredDoctor] = useState("");
   const [patientType, setPatientType] = useState<PatientType | "">("");
   const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -84,7 +84,7 @@ export function PatientRegistrationModal({
     setPatientId(getNextPatientId());
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
@@ -113,24 +113,31 @@ export function PatientRegistrationModal({
       return;
     }
 
+    const payload = {
+      firstName,
+      lastName: lastName || undefined,
+      phone,
+      gender,
+      bloodGroup,
+      dateOfBirth,
+      address: address.trim(),
+      referredDoctor: referredDoctor || undefined,
+      patientType,
+    };
+
+    setSaving(true);
     try {
-      const payload = {
-        firstName,
-        lastName: lastName || undefined,
-        phone,
-        gender,
-        bloodGroup,
-        dateOfBirth,
-        age: age ? Number(age) : undefined,
-        address: address.trim(),
-        referredDoctor: referredDoctor || undefined,
-        patientType,
-      };
-      const saved = isEdit && patient ? updatePatient(patient.id, payload) : addPatient(payload);
+      const api = await getLimsData();
+      const saved =
+        isEdit && patient
+          ? await api.patients.update(patient.id, payload)
+          : await api.patients.create(payload);
       onSaved(saved);
       if (!isEdit) resetForm();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not save patient.");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -345,8 +352,8 @@ export function PatientRegistrationModal({
                 >
                   Cancel
                 </button>
-                <button type="submit" className="lims-btn-primary">
-                  {isEdit ? "Save Changes" : "Save Patient"}
+                <button type="submit" className="lims-btn-primary" disabled={saving}>
+                  {saving ? "Saving…" : isEdit ? "Save Changes" : "Save Patient"}
                 </button>
               </div>
             </form>

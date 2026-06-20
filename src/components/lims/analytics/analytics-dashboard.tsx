@@ -12,12 +12,13 @@ import {
 import { KpiCard } from "@/components/lims/kpi-card";
 import { AnalyticsBarChart } from "@/components/lims/analytics/analytics-bar-chart";
 import { AnalyticsPieChart } from "@/components/lims/analytics/analytics-pie-chart";
+import { getLimsData } from "@/lib/api/use-lims-data";
 import {
   ANALYTICS_PERIODS,
   analyticsSnapshotCsvRows,
-  getAnalyticsSnapshot,
   getAnalyticsTrendSubtitle,
   type AnalyticsPeriod,
+  type AnalyticsSnapshot,
 } from "@/lib/data/analytics";
 import { downloadCsv } from "@/lib/utils/csv";
 import { cn, formatCurrency } from "@/lib/utils";
@@ -45,12 +46,22 @@ function periodKpiSuffix(period: AnalyticsPeriod): string {
 
 export function AnalyticsDashboard() {
   const [period, setPeriod] = useState<AnalyticsPeriod>("overall");
-  const [data, setData] = useState<ReturnType<typeof getAnalyticsSnapshot> | null>(null);
+  const [data, setData] = useState<AnalyticsSnapshot | null>(null);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    setData(getAnalyticsSnapshot(period));
-    setReady(true);
+    let active = true;
+    (async () => {
+      const api = await getLimsData();
+      const snapshot = await api.analytics.snapshot(period);
+      if (active) {
+        setData(snapshot);
+        setReady(true);
+      }
+    })();
+    return () => {
+      active = false;
+    };
   }, [period]);
 
   const trendSubtitle = getAnalyticsTrendSubtitle(period);

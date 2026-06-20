@@ -1,6 +1,6 @@
-import { listPatients, getPatient } from '@/lib/firestore/app-data';
-import { createPatient, deletePatientDb, updatePatientDb } from '@/lib/firestore/app-writes';
-import { patientCreateSchema } from '@/lib/validation/entities';
+import { listAppointments } from '@/lib/firestore/app-data';
+import { createAppointmentBooking } from '@/lib/firestore/app-writes';
+import { appointmentCreateSchema } from '@/lib/validation/entities';
 import { ensureSeeded } from '@/lib/firestore/seed';
 import {
   ensureDb,
@@ -19,9 +19,9 @@ export async function GET(request: Request) {
       await ensureDb();
       requireAuth(request);
       await ensureSeeded();
-      return jsonData(await listPatients());
+      return jsonData(await listAppointments());
     }
-    return jsonData(await localApi.patients.list());
+    return jsonData(await localApi.appointments.list());
   } catch (e) {
     return handleRouteError(e);
   }
@@ -29,16 +29,16 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const body = patientCreateSchema.parse(await parseJson(request));
+    const body = appointmentCreateSchema.parse(await parseJson(request));
     if (useRemoteDb()) {
       await ensureDb();
       const session = requireAuth(request);
-      requirePermission(session, 'patients.create');
+      requirePermission(session, 'appointments.create');
       await ensureSeeded();
-      return jsonData(await createPatient(body, session), 201);
+      return jsonData(await createAppointmentBooking(body, session), 201);
     }
     requireAuth(request);
-    return jsonData(await localApi.patients.create(body), 201);
+    return jsonData(await localApi.appointments.create(body), 201);
   } catch (e) {
     return handleRouteError(e);
   }

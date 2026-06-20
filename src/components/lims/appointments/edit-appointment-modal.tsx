@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 import { ModalPortal } from '@/components/lims/modal-portal';
 import { FormField } from '@/components/lims/form-field';
+import { getLimsData } from '@/lib/api/use-lims-data';
 import type { Appointment, OrderPriority } from '@/lib/types/lims';
-import { updateAppointment } from '@/lib/data/appointments-store';
 import { getReferrals } from '@/lib/data/store';
 
 const PRIORITY_OPTIONS: OrderPriority[] = ['Normal', 'Urgent', 'STAT'];
@@ -36,7 +36,7 @@ export function EditAppointmentModal({ appointment, onClose, onSaved }: EditAppo
     setNotes(appointment.notes ?? '');
   }, [appointment]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     if (!scheduledAt) {
@@ -44,7 +44,8 @@ export function EditAppointmentModal({ appointment, onClose, onSaved }: EditAppo
       return;
     }
     try {
-      const updated = updateAppointment(appointment.id, {
+      const api = await getLimsData();
+      const updated = await api.appointments.update(appointment.id, {
         scheduledAt: new Date(scheduledAt).toISOString(),
         type: appointmentType,
         status,

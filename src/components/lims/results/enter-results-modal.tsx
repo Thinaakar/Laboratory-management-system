@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 import { ModalPortal } from '@/components/lims/modal-portal';
-import { getResults } from '@/lib/data/store';
-import { logAuditAction } from '@/lib/audit/log-action';
+import { getLimsData } from '@/lib/api/use-lims-data';
+import type { TestResult } from '@/lib/types/lims';
 
 interface EnterResultsModalProps {
   onClose: () => void;
@@ -13,21 +13,30 @@ interface EnterResultsModalProps {
 
 export function EnterResultsModal({ onClose, onSaved }: EnterResultsModalProps) {
   const [ready, setReady] = useState(false);
-  const [results, setResults] = useState<ReturnType<typeof getResults>>([]);
+  const [results, setResults] = useState<TestResult[]>([]);
   const [resultId, setResultId] = useState('');
   const [value, setValue] = useState('');
   const [unit, setUnit] = useState('');
   const [critical, setCritical] = useState(false);
   const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    const list = getResults();
-    setResults(list);
-    setResultId(list[0]?.id ?? '');
-    setReady(true);
+    let active = true;
+    (async () => {
+      const api = await getLimsData();
+      const list = await api.results.list();
+      if (!active) return;
+      setResults(list);
+      setResultId(list[0]?.id ?? '');
+      setReady(true);
+    })();
+    return () => {
+      active = false;
+    };
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -40,13 +49,21 @@ export function EnterResultsModal({ onClose, onSaved }: EnterResultsModalProps) 
       return;
     }
 
-    const selected = results.find((r) => r.id === resultId);
-    logAuditAction({
-      action: 'UPDATE',
-      module: 'results',
-      details: `Entered result for ${selected?.testName ?? resultId}: ${value.trim()}${unit ? ` ${unit}` : ''}`,
-    });
-    onSaved();
+    setSaving(true);
+    try {
+      const api = await getLimsData();
+      await api.results.enter({
+        resultId,
+        value: value.trim(),
+        unit: unit.trim() || undefined,
+        isCritical: critical,
+      });
+      onSaved();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not save result.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -146,8 +163,8 @@ export function EnterResultsModal({ onClose, onSaved }: EnterResultsModalProps) 
                 <button type="button" onClick={onClose} className="lims-btn-secondary">
                   Cancel
                 </button>
-                <button type="submit" className="lims-btn-primary" disabled={!ready || results.length === 0}>
-                  Save Result
+                <button type="submit" className="lims-btn-primary" disabled={!ready || results.length === 0 || saving}>
+                  {saving ? 'Saving…' : 'Save Result'}
                 </button>
               </div>
             </form>

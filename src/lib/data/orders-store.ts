@@ -209,6 +209,36 @@ export function addInvoice(input: {
   return created;
 }
 
+export function recordInvoicePayment(input: {
+  invoiceId: string;
+  amount: number;
+  paymentMethod: 'Cash' | 'UPI' | 'Card';
+}): Invoice {
+  const invoices = getInvoices();
+  const index = invoices.findIndex((i) => i.id === input.invoiceId);
+  if (index === -1) throw new Error('Invoice not found.');
+  const existing = invoices[index];
+  const due = existing.amount - existing.paidAmount;
+  if (input.amount > due + 0.001) throw new Error('Payment exceeds outstanding balance.');
+  const paidAmount = existing.paidAmount + input.amount;
+  const status =
+    paidAmount >= existing.amount ? 'Paid' : paidAmount > 0 ? 'Partial' : 'Pending';
+  const updated: Invoice = {
+    ...existing,
+    paidAmount,
+    status,
+    paymentMethod: input.paymentMethod,
+  };
+  memoryInvoices = invoices.map((i) => (i.id === input.invoiceId ? updated : i));
+  saveInvoices(memoryInvoices);
+  logAuditAction({
+    action: 'UPDATE',
+    module: 'billing',
+    details: `Recorded ${input.paymentMethod} payment of ₹${input.amount} for ${existing.id}`,
+  });
+  return updated;
+}
+
 export function deleteInvoice(id: string): void {
   const invoices = getInvoices();
   const invoice = invoices.find((i) => i.id === id);

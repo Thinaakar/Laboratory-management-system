@@ -12,7 +12,7 @@ import { PatientRegistrationModal } from '@/components/lims/patients/patient-reg
 import { StatusBadge } from '@/components/lims/status-badge';
 import { TableRowActions } from '@/components/lims/table-row-actions';
 import { defaultStringSort, useDataTable } from '@/hooks/use-data-table';
-import { deletePatient, getPatients } from '@/lib/data/patients-store';
+import { getLimsData } from '@/lib/api/use-lims-data';
 import type { Patient } from '@/lib/types/lims';
 import { formatDateTime } from '@/lib/utils';
 
@@ -42,7 +42,10 @@ function PatientsContent() {
   const [editPatient, setEditPatient] = useState<Patient | null>(null);
   const [successMessage, setSuccessMessage] = useState('');
 
-  const refresh = useCallback(() => setPatients(getPatients()), []);
+  const refresh = useCallback(async () => {
+    const api = await getLimsData();
+    setPatients(await api.patients.list());
+  }, []);
 
   useEffect(() => {
     refresh();
@@ -56,11 +59,12 @@ function PatientsContent() {
   }, [searchParams]);
 
   const handleDelete = useCallback(
-    (p: Patient) => {
+    async (p: Patient) => {
       if (!window.confirm(`Delete patient ${p.name} (${p.id})? This cannot be undone.`)) return;
       try {
-        deletePatient(p.id);
-        refresh();
+        const api = await getLimsData();
+        await api.patients.remove(p.id);
+        await refresh();
         setSuccessMessage(`Patient ${p.id} deleted.`);
       } catch {
         window.alert('Could not delete patient.');

@@ -13,7 +13,7 @@ import { FlashBanner } from '@/components/lims/flash-banner';
 import { StatusBadge, statusVariant } from '@/components/lims/status-badge';
 import { TableRowActions } from '@/components/lims/table-row-actions';
 import { defaultStringSort, useDataTable } from '@/hooks/use-data-table';
-import { deleteAppointment, getAppointments } from '@/lib/data/appointments-store';
+import { getLimsData } from '@/lib/api/use-lims-data';
 import type { Appointment } from '@/lib/types/lims';
 import { formatDateTime } from '@/lib/utils';
 
@@ -30,7 +30,10 @@ function AppointmentsContent() {
   const [editAppointment, setEditAppointment] = useState<Appointment | null>(null);
   const [successMessage, setSuccessMessage] = useState('');
 
-  const refresh = useCallback(() => setBookings(getAppointments()), []);
+  const refresh = useCallback(async () => {
+    const api = await getLimsData();
+    setBookings(await api.appointments.list());
+  }, []);
 
   useEffect(() => {
     refresh();
@@ -44,11 +47,12 @@ function AppointmentsContent() {
   }, [searchParams]);
 
   const handleDelete = useCallback(
-    (b: Appointment) => {
+    async (b: Appointment) => {
       if (!window.confirm(`Delete appointment ${b.id} for ${b.patientName}? This cannot be undone.`)) return;
       try {
-        deleteAppointment(b.id);
-        refresh();
+        const api = await getLimsData();
+        await api.appointments.remove(b.id);
+        await refresh();
         setSuccessMessage(`Appointment ${b.id} deleted.`);
       } catch {
         window.alert('Could not delete appointment.');

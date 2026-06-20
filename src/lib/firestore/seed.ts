@@ -14,6 +14,9 @@ import {
   seedSamples,
   seedTests,
 } from '@/lib/data/store';
+import { seedAppointments } from '@/lib/data/appointments-store';
+import { seedPackages } from '@/lib/data/packages-store';
+import { seedReferrals } from '@/lib/data/referrals-store';
 
 async function seedUsers(): Promise<void> {
   for (const demo of DEMO_USERS) {
@@ -57,6 +60,15 @@ async function runSeed(): Promise<string> {
   for (const result of seedResults) {
     await seedDocument('results', result.id, result as unknown as Record<string, unknown>);
   }
+  for (const pkg of seedPackages) {
+    await seedDocument('packages', pkg.id, pkg as unknown as Record<string, unknown>);
+  }
+  for (const ref of seedReferrals) {
+    await seedDocument('referrals', ref.id, ref as unknown as Record<string, unknown>);
+  }
+  for (const apt of seedAppointments) {
+    await seedDocument('appointments', apt.id, apt as unknown as Record<string, unknown>);
+  }
 
   return `Seeded ${DEMO_USERS.length} users, ${seedPatients.length} patients, ${seedOrders.length} orders, and lab records.`;
 }
@@ -72,7 +84,7 @@ export async function ensureSeeded(): Promise<{ seeded: boolean; message: string
 
 export async function forceReseed(): Promise<{ seeded: boolean; message: string }> {
   const db = getAdminFirestore();
-  const tables = ['users', 'patients', 'orders', 'invoices', 'samples', 'results', 'tests', 'departments', 'branches'];
+  const tables = ['users', 'patients', 'orders', 'invoices', 'samples', 'results', 'tests', 'departments', 'branches', 'packages', 'referrals', 'appointments'];
   for (const table of tables) {
     const snap = await appCollection(db, table).get();
     if (!snap.empty) {

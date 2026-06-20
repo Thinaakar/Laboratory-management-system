@@ -7,7 +7,8 @@ import { PageHeader } from '@/components/lims/page-header';
 import { FlashBanner } from '@/components/lims/flash-banner';
 import { EnterResultsModal } from '@/components/lims/results/enter-results-modal';
 import { StatusBadge, statusVariant } from '@/components/lims/status-badge';
-import { getResults } from '@/lib/data/store';
+import { getLimsData } from '@/lib/api/use-lims-data';
+import type { TestResult } from '@/lib/types/lims';
 import { downloadTableCsv } from '@/lib/utils/csv';
 import { cn, formatDateTime } from '@/lib/utils';
 
@@ -18,10 +19,11 @@ function ResultsContent() {
   const searchParams = useSearchParams();
   const [filter, setFilter] = useState<ResultsFilter>('all');
   const [showModal, setShowModal] = useState(false);
-  const [results, setResults] = useState(getResults());
+  const [results, setResults] = useState<TestResult[]>([]);
 
-  const refresh = useCallback(() => {
-    setResults(getResults());
+  const refresh = useCallback(async () => {
+    const api = await getLimsData();
+    setResults(await api.results.list());
   }, []);
 
   useEffect(() => {

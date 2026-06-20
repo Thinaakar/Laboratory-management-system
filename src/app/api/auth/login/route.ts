@@ -32,7 +32,23 @@ export async function POST(request: Request) {
 
     const demo = validateLogin(body.email, body.password);
     if (!demo) return apiError('Invalid email or password', 401);
-    return jsonData({ displayName: demo.name, email: demo.email, role: demo.role, offline: true });
+    const token = createSessionToken({
+      userId: demo.id,
+      email: demo.email,
+      name: demo.name,
+      role: demo.role,
+      isDemo: true,
+    });
+    const res = jsonData({
+      id: demo.id,
+      displayName: demo.name,
+      email: demo.email,
+      role: demo.role,
+      status: 'Active' as const,
+      offline: true,
+    });
+    res.cookies.set(SESSION_COOKIE, token, sessionCookieOptions());
+    return res;
   } catch (e) {
     return handleRouteError(e);
   }

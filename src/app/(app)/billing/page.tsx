@@ -12,7 +12,7 @@ import { FlashBanner } from '@/components/lims/flash-banner';
 import { StatusBadge, statusVariant } from '@/components/lims/status-badge';
 import { TableRowActions } from '@/components/lims/table-row-actions';
 import { defaultStringSort, useDataTable } from '@/hooks/use-data-table';
-import { getInvoices } from '@/lib/data/orders-store';
+import { getLimsData } from '@/lib/api/use-lims-data';
 import type { Invoice } from '@/lib/types/lims';
 import { formatCurrency, formatDateTime } from '@/lib/utils';
 
@@ -30,7 +30,10 @@ function BillingContent() {
   const [viewInvoice, setViewInvoice] = useState<Invoice | null>(null);
   const [successMessage, setSuccessMessage] = useState('');
 
-  const refresh = useCallback(() => setInvoices(getInvoices()), []);
+  const refresh = useCallback(async () => {
+    const api = await getLimsData();
+    setInvoices(await api.invoices.list());
+  }, []);
 
   useEffect(() => {
     refresh();

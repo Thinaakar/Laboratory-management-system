@@ -3,8 +3,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { X } from 'lucide-react';
 import { ModalPortal } from '@/components/lims/modal-portal';
-import { getInvoices } from '@/lib/data/store';
-import { logAuditAction } from '@/lib/audit/log-action';
+import { getLimsData } from '@/lib/api/use-lims-data';
+import type { Invoice } from '@/lib/types/lims';
 import { formatCurrency } from '@/lib/utils';
 
 interface CollectPaymentModalProps {
@@ -19,24 +19,33 @@ export function CollectPaymentModal({
   initialInvoiceId,
 }: CollectPaymentModalProps) {
   const [ready, setReady] = useState(false);
-  const [invoices, setInvoices] = useState<ReturnType<typeof getInvoices>>([]);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [invoiceId, setInvoiceId] = useState('');
   const [amount, setAmount] = useState('');
   const [method, setMethod] = useState<'Cash' | 'UPI' | 'Card'>('UPI');
   const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    const pending = getInvoices().filter((i) => i.status !== 'Paid');
-    const defaultId =
-      initialInvoiceId && pending.some((i) => i.id === initialInvoiceId)
-        ? initialInvoiceId
-        : pending[0]?.id ?? '';
-    const selected = pending.find((i) => i.id === defaultId);
-
-    setInvoices(pending);
-    setInvoiceId(defaultId);
-    setAmount(selected ? String(selected.amount - selected.paidAmount) : '');
-    setReady(true);
+    let active = true;
+    (async () => {
+      const api = await getLimsData();
+      const all = await api.invoices.list();
+      const pending = all.filter((i) => i.status !== 'Paid');
+      const defaultId =
+        initialInvoiceId && pending.some((i) => i.id === initialInvoiceId)
+          ? initialInvoiceId
+          : pending[0]?.id ?? '';
+      const selected = pending.find((i) => i.id === defaultId);
+      if (!active) return;
+      setInvoices(pending);
+      setInvoiceId(defaultId);
+      setAmount(selected ? String(selected.amount - selected.paidAmount) : '');
+      setReady(true);
+    })();
+    return () => {
+      active = false;
+    };
   }, [initialInvoiceId]);
 
   const selectedInvoice = useMemo(
@@ -52,7 +61,7 @@ export function CollectPaymentModal({
     setAmount(inv ? String(inv.amount - inv.paidAmount) : '');
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -60,17 +69,25 @@ export function CollectPaymentModal({
       setError('Select an invoice.');
       return;
     }
-    if (!amount.trim()) {
-      setError('Enter a payment amount.');
+    const paymentAmount = Number(amount);
+    if (!amount.trim() || Number.isNaN(paymentAmount) || paymentAmount <= 0) {
+      setError('Enter a valid payment amount.');
       return;
     }
 
-    logAuditAction({
-      action: 'UPDATE',
-      module: 'billing',
-      details: `Recorded ${method} payment of ₹${amount} for ${selectedInvoice.id}`,
-    });
-    onSaved();
+    setSaving(true);
+    try {
+      const api = await getLimsData();
+      await api.invoices.recordPayment(selectedInvoice.id, {
+        amount: paymentAmount,
+        paymentMethod: method,
+      });
+      onSaved();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not record payment.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -203,8 +220,8 @@ export function CollectPaymentModal({
                 <button type="button" onClick={onClose} className="lims-btn-secondary">
                   Cancel
                 </button>
-                <button type="submit" className="lims-btn-primary" disabled={!ready || !selectedInvoice}>
-                  Record Payment
+                <button type="submit" className="lims-btn-primary" disabled={!ready || !selectedInvoice || saving}>
+                  {saving ? 'Saving…' : 'Record Payment'}
                 </button>
               </div>
             </form>

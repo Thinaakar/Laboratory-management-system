@@ -1,18 +1,54 @@
 'use client';
 
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Suspense } from 'react';
+import { Suspense, useCallback, useEffect, useState } from 'react';
 import { PageHeader } from '@/components/lims/page-header';
 import { FlashBanner } from '@/components/lims/flash-banner';
 import { StatusBadge } from '@/components/lims/status-badge';
-import { getResults } from '@/lib/data/store';
-import { logAuditAction } from '@/lib/audit/log-action';
+import { getLimsData } from '@/lib/api/use-lims-data';
+import type { TestResult } from '@/lib/types/lims';
 import { formatDateTime } from '@/lib/utils';
 
 function ApprovalContent() {
   const router = useRouter();
-  const pending = getResults().filter((r) => r.approvalStatus === 'Pending');
+  const [pending, setPending] = useState<TestResult[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [actingId, setActingId] = useState<string | null>(null);
+
+  const refresh = useCallback(async () => {
+    const api = await getLimsData();
+    const results = await api.results.list();
+    setPending(results.filter((r) => r.approvalStatus === 'Pending'));
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  const handleApprove = async (id: string) => {
+    setActingId(id);
+    try {
+      const api = await getLimsData();
+      await api.results.approve(id);
+      router.push('/reports?success=approved');
+    } catch {
+      window.alert('Could not approve result.');
+      setActingId(null);
+    }
+  };
+
+  const handleReject = async (id: string) => {
+    setActingId(id);
+    try {
+      const api = await getLimsData();
+      await api.results.reject(id);
+      router.push('/results?success=rejected');
+    } catch {
+      window.alert('Could not reject result.');
+      setActingId(null);
+    }
+  };
 
   return (
     <>
@@ -32,7 +68,13 @@ function ApprovalContent() {
             </tr>
           </thead>
           <tbody>
-            {pending.length === 0 ? (
+            {loading ? (
+              <tr>
+                <td colSpan={8} className="py-8 text-center text-muted">
+                  Loading pending results…
+                </td>
+              </tr>
+            ) : pending.length === 0 ? (
               <tr>
                 <td colSpan={8} className="py-8 text-center text-muted">
                   No results pending approval.
@@ -62,28 +104,16 @@ function ApprovalContent() {
                       <button
                         type="button"
                         className="lims-btn-primary px-3 py-1 text-xs"
-                        onClick={() => {
-                          logAuditAction({
-                            action: 'APPROVE',
-                            module: 'reports',
-                            details: `Approved result ${r.id} — ${r.testName}`,
-                          });
-                          router.push('/reports?success=approved');
-                        }}
+                        disabled={actingId === r.id}
+                        onClick={() => void handleApprove(r.id)}
                       >
                         Approve
                       </button>
                       <button
                         type="button"
                         className="lims-btn-secondary px-3 py-1 text-xs"
-                        onClick={() => {
-                          logAuditAction({
-                            action: 'REJECT',
-                            module: 'reports',
-                            details: `Rejected result ${r.id} — ${r.testName}`,
-                          });
-                          router.push('/results?success=rejected');
-                        }}
+                        disabled={actingId === r.id}
+                        onClick={() => void handleReject(r.id)}
                       >
                         Reject
                       </button>

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getAdminFirestore, isFirebaseConfigured } from '@/lib/firebase/admin';
 import { ensureAppTables } from '@/lib/firebase/collections';
 import { getSessionFromRequest, type SessionPayload } from '@/lib/auth/session';
+import { DEFAULT_ROLE_PERMISSIONS, hasPermission } from '@/lib/auth/permissions';
 import { apiError } from '@/lib/http/api-error';
 
 export function jsonData<T>(data: T, status = 200) {
@@ -21,6 +22,21 @@ export function requireAuth(request: Request): SessionPayload {
   const session = getSessionFromRequest(request);
   if (!session) throw new AuthError('Unauthorized', 401);
   return session;
+}
+
+export function requirePermission(session: SessionPayload, permission: string): void {
+  const rolePerms = DEFAULT_ROLE_PERMISSIONS[session.role] ?? [];
+  if (!hasPermission(rolePerms, permission)) {
+    throw new AuthError('Forbidden', 403);
+  }
+}
+
+export async function parseJson<T>(request: Request): Promise<T> {
+  return request.json() as Promise<T>;
+}
+
+export function useRemoteDb(): boolean {
+  return isFirebaseConfigured();
 }
 
 export class AuthError extends Error {

@@ -4,11 +4,16 @@ import { useEffect, useMemo, useState } from "react";
 import { X } from "lucide-react";
 import { ModalPortal } from "@/components/lims/modal-portal";
 import { SearchableSelect } from "@/components/lims/searchable-select";
-import type { Appointment, Invoice, OrderPriority } from "@/lib/types/lims";
-import { addBooking } from "@/lib/data/appointments-store";
-import { addInvoice, addOrder } from "@/lib/data/orders-store";
-import { getPatients } from "@/lib/data/patients-store";
-import { getPackages, getReferrals, getTests } from "@/lib/data/store";
+import type {
+  Appointment,
+  DoctorReferral,
+  HealthPackage,
+  Invoice,
+  LabTest,
+  OrderPriority,
+  Patient,
+} from "@/lib/types/lims";
+import { getLimsData } from "@/lib/api/use-lims-data";
 
 const PRIORITY_OPTIONS: OrderPriority[] = ["Normal", "Urgent", "STAT"];
 
@@ -21,10 +26,11 @@ export function ScheduleBookingModal({
   onClose,
   onSaved,
 }: ScheduleBookingModalProps) {
-  const patients = getPatients();
-  const tests = getTests();
-  const referrals = getReferrals();
-  const packages = getPackages();
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [tests, setTests] = useState<LabTest[]>([]);
+  const [referrals, setReferrals] = useState<DoctorReferral[]>([]);
+  const [packages, setPackages] = useState<HealthPackage[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const doctorOptions = useMemo(
     () => [
@@ -47,17 +53,38 @@ export function ScheduleBookingModal({
   const [priority, setPriority] = useState<OrderPriority>("Normal");
   const [notes, setNotes] = useState("");
   const [packageId, setPackageId] = useState("");
-  const [selectedTests, setSelectedTests] = useState<string[]>(["TST-CBC"]);
+  const [selectedTests, setSelectedTests] = useState<string[]>([]);
   const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (patients.length && !patientId) {
-      setPatientId(patients[0].id);
-    }
-  }, [patients, patientId]);
+    let active = true;
+    (async () => {
+      try {
+        const api = await getLimsData();
+        const [p, t, r, pkgs] = await Promise.all([
+          api.patients.list(),
+          api.catalog.tests(),
+          api.catalog.referrals(),
+          api.catalog.packages(),
+        ]);
+        if (!active) return;
+        setPatients(p);
+        setTests(t);
+        setReferrals(r);
+        setPackages(pkgs);
+        if (p.length) setPatientId((prev) => prev || p[0].id);
+      } finally {
+        if (active) setLoading(false);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const selectedPackage = useMemo(
-    () => packages.find((p) => p.id === packageId),
+    () => (packageId && packageId !== "none" ? packages.find((p) => p.id === packageId) : undefined),
     [packages, packageId],
   );
 
@@ -70,7 +97,10 @@ export function ScheduleBookingModal({
 
   const handlePackageChange = (nextPackageId: string) => {
     setPackageId(nextPackageId);
-    if (!nextPackageId) return;
+    if (!nextPackageId || nextPackageId === "none") {
+      setSelectedTests([]);
+      return;
+    }
     const pkg = packages.find((p) => p.id === nextPackageId);
     if (pkg) {
       setSelectedTests(pkg.testIds);
@@ -78,7 +108,7 @@ export function ScheduleBookingModal({
   };
 
   const toggleTest = (testId: string) => {
-    setPackageId("");
+    if (packageId && packageId !== "none") return;
     setSelectedTests((prev) =>
       prev.includes(testId)
         ? prev.filter((id) => id !== testId)
@@ -86,7 +116,7 @@ export function ScheduleBookingModal({
     );
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
@@ -99,33 +129,20 @@ export function ScheduleBookingModal({
       setError("Appointment date and time is required.");
       return;
     }
+    if (!packageId) {
+      setError("Health package is required.");
+      return;
+    }
     if (selectedTests.length === 0) {
       setError("Select at least one test.");
       return;
     }
 
+    const chosenTests = tests.filter((t) => selectedTests.includes(t.id));
+    setSaving(true);
     try {
-      const chosenTests = tests.filter((t) => selectedTests.includes(t.id));
-      const order = addOrder({
-        patientId: patient.id,
-        patientName: patient.name,
-        testIds: chosenTests.map((t) => t.id),
-        testNames: chosenTests.map((t) => t.name),
-        totalAmount: orderTotal,
-        referringDoctor: referringDoctor || undefined,
-        priority,
-        healthPackageId: selectedPackage?.id,
-        healthPackageName: selectedPackage?.name,
-      });
-
-      const invoice = addInvoice({
-        orderId: order.id,
-        patientId: patient.id,
-        patientName: patient.name,
-        amount: orderTotal,
-      });
-
-      const booking = addBooking({
+      const api = await getLimsData();
+      const result = await api.appointments.create({
         patientId: patient.id,
         patientName: patient.name,
         scheduledAt,
@@ -135,17 +152,18 @@ export function ScheduleBookingModal({
         priority,
         healthPackageId: selectedPackage?.id,
         healthPackageName: selectedPackage?.name,
-        orderId: order.id,
         testIds: chosenTests.map((t) => t.id),
         testNames: chosenTests.map((t) => t.name),
         orderTotal,
+        packageSelection: packageId,
       });
-
-      onSaved({ booking, invoice });
+      onSaved({ booking: result.booking, invoice: result.invoice });
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Could not schedule booking.",
       );
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -185,6 +203,10 @@ export function ScheduleBookingModal({
                   </p>
                 )}
 
+                {loading ? (
+                  <p className="text-sm text-muted">Loading schedule data…</p>
+                ) : (
+                  <>
                 <div>
                   <label className="mb-1 block text-xs font-medium text-muted">
                     Patient
@@ -287,14 +309,18 @@ export function ScheduleBookingModal({
 
                 <div className="border-t border-muted-border pt-5">
                   <label className="mb-1 block text-xs font-medium text-muted">
-                    Health Package
+                    Health Package <span className="text-error">*</span>
                   </label>
                   <select
                     className="lims-input"
                     value={packageId}
                     onChange={(e) => handlePackageChange(e.target.value)}
+                    required
                   >
-                    <option value="">None</option>
+                    <option value="" disabled>
+                      Select health package
+                    </option>
+                    <option value="none">None</option>
                     {packages.map((pkg) => (
                       <option key={pkg.id} value={pkg.id}>
                         {pkg.name}
@@ -310,18 +336,21 @@ export function ScheduleBookingModal({
 
                 <div>
                   <label className="mb-2 block text-xs font-medium text-muted">
-                    Tests <span className="text-error">*</span>
+                    {selectedPackage ? "Included Tests" : "Tests"}{" "}
+                    <span className="text-error">*</span>
                   </label>
                   <div className="space-y-2 rounded-md border border-muted-border p-3">
                     {tests.map((t) => (
                       <label
                         key={t.id}
-                        className="flex cursor-pointer items-center gap-2 text-sm"
+                        className={`flex items-center gap-2 text-sm ${selectedPackage ? "" : "cursor-pointer"}`}
                       >
                         <input
                           type="checkbox"
                           checked={selectedTests.includes(t.id)}
                           onChange={() => toggleTest(t.id)}
+                          disabled={Boolean(selectedPackage)}
+                          readOnly={Boolean(selectedPackage)}
                         />
                         <span>{t.name}</span>
                         <span className="ml-auto text-muted">₹{t.price}</span>
@@ -338,6 +367,8 @@ export function ScheduleBookingModal({
                     )}
                   </p>
                 </div>
+                  </>
+                )}
               </div>
 
               <div className="flex shrink-0 justify-end gap-3 border-t border-muted-border bg-white px-6 py-4">
@@ -348,8 +379,8 @@ export function ScheduleBookingModal({
                 >
                   Cancel
                 </button>
-                <button type="submit" className="lims-btn-primary">
-                  Create Order &amp; Proceed to Billing
+                <button type="submit" className="lims-btn-primary" disabled={loading || saving}>
+                  {saving ? "Saving…" : "Create Order & Proceed to Billing"}
                 </button>
               </div>
             </form>

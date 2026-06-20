@@ -62,17 +62,34 @@ See [docs/guide.md](docs/guide.md) for full API integration steps.
 
 ## API routes
 
-| Route | Purpose |
-|-------|---------|
-| `POST /api/auth/login` | Staff session (cookie) |
-| `GET /api/auth/session` | Current user |
-| `POST /api/auth/logout` | Clear session |
-| `GET /api/patients` | List patients |
-| `POST /api/patients` | Register patient (Firebase required) |
-| `GET /api/dashboard/kpis` | Dashboard metrics |
-| `POST /api/leads` | Marketing lead capture |
+| Route | Methods | Purpose |
+|-------|---------|---------|
+| `GET /api/health` | GET | Service + Firebase status |
+| `POST /api/auth/login` | POST | Staff session (cookie) |
+| `GET /api/auth/session` | GET | Current user |
+| `POST /api/auth/logout` | POST | Clear session |
+| `GET/POST /api/patients` | GET, POST | List / register patients |
+| `GET/PATCH/DELETE /api/patients/:id` | GET, PATCH, DELETE | Patient detail |
+| `GET/POST /api/appointments` | GET, POST | List / schedule (order + invoice) |
+| `GET/PATCH/DELETE /api/appointments/:id` | GET, PATCH, DELETE | Appointment detail |
+| `GET /api/orders` | GET | Lab orders |
+| `GET /api/invoices` | GET | Invoices |
+| `POST /api/invoices/:id/payment` | POST | Record payment |
+| `GET/POST /api/samples` | GET, POST | Samples |
+| `GET/PATCH/DELETE /api/samples/:id` | GET, PATCH, DELETE | Sample detail |
+| `GET /api/samples/next-barcode` | GET | Next barcode |
+| `GET/POST /api/results` | GET, POST | Results / enter values |
+| `POST /api/results/:id/approve` | POST | Approve result |
+| `POST /api/results/:id/reject` | POST | Reject result |
+| `GET /api/reports` | GET | Approved reports |
+| `GET /api/analytics` | GET | Analytics snapshot (`?period=`) |
+| `GET /api/tests` | GET | Test catalog |
+| `GET /api/packages` | GET | Health packages |
+| `GET /api/referrals` | GET | Referring doctors |
+| `GET /api/dashboard/kpis` | GET | Dashboard metrics |
+| `POST /api/leads` | POST | Marketing lead capture |
 
-Without Firebase, the app runs on in-memory seed data from `lib/data/store.ts`.
+All LIMS routes require auth (session cookie). With Firebase configured, data persists in Firestore. Without Firebase, the UI uses local session storage via `lib/api/local-handlers.ts`.
 
 ## Scripts
 

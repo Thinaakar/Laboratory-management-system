@@ -39,7 +39,7 @@ export function PatientRegistrationModal({
   const [bloodGroup, setBloodGroup] = useState<BloodGroup | "">("");
   const [address, setAddress] = useState("");
   const [referredDoctor, setReferredDoctor] = useState("");
-  const [patientType, setPatientType] = useState<PatientType>("Walk-In");
+  const [patientType, setPatientType] = useState<PatientType | "">("");
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -79,7 +79,7 @@ export function PatientRegistrationModal({
     setBloodGroup("");
     setAddress("");
     setReferredDoctor("");
-    setPatientType("Walk-In");
+    setPatientType("");
     setError("");
     setPatientId(getNextPatientId());
   };
@@ -96,6 +96,22 @@ export function PatientRegistrationModal({
       setError("Mobile number is required.");
       return;
     }
+    if (!dateOfBirth.trim()) {
+      setError("Date of birth is required.");
+      return;
+    }
+    if (!address.trim()) {
+      setError("Address is required.");
+      return;
+    }
+    if (!patientType) {
+      setError("Patient type is required.");
+      return;
+    }
+    if (!bloodGroup) {
+      setError("Blood group is required.");
+      return;
+    }
 
     try {
       const payload = {
@@ -103,10 +119,10 @@ export function PatientRegistrationModal({
         lastName: lastName || undefined,
         phone,
         gender,
-        bloodGroup: bloodGroup || undefined,
-        dateOfBirth: dateOfBirth || undefined,
+        bloodGroup,
+        dateOfBirth,
         age: age ? Number(age) : undefined,
-        address: address || undefined,
+        address: address.trim(),
         referredDoctor: referredDoctor || undefined,
         patientType,
       };
@@ -213,13 +229,14 @@ export function PatientRegistrationModal({
                 </FormField>
 
                 <FormGrid>
-                  <FormField label="Date of Birth" htmlFor="patient-dob">
+                  <FormField label="Date of Birth" required htmlFor="patient-dob">
                     <input
                       id="patient-dob"
                       className="lims-input"
                       type="date"
                       value={dateOfBirth}
                       onChange={(e) => handleDobChange(e.target.value)}
+                      required
                     />
                   </FormField>
                   <FormField label="Age" htmlFor="patient-age">
@@ -251,7 +268,7 @@ export function PatientRegistrationModal({
                       placeholder="+91 …"
                     />
                   </FormField>
-                  <FormField label="Blood Group" htmlFor="patient-blood-group">
+                  <FormField label="Blood Group" required htmlFor="patient-blood-group">
                     <select
                       id="patient-blood-group"
                       className="lims-input"
@@ -259,6 +276,7 @@ export function PatientRegistrationModal({
                       onChange={(e) =>
                         setBloodGroup(e.target.value as BloodGroup | "")
                       }
+                      required
                     >
                       <option value="">Select blood group</option>
                       {BLOOD_GROUP_OPTIONS.map((group) => (
@@ -270,13 +288,14 @@ export function PatientRegistrationModal({
                   </FormField>
                 </FormGrid>
 
-                <FormField label="Address" htmlFor="patient-address">
+                <FormField label="Address" required htmlFor="patient-address">
                   <textarea
                     id="patient-address"
                     className="lims-input"
                     rows={3}
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
+                    required
                     placeholder="Street, city, pin code"
                   />
                 </FormField>
@@ -297,15 +316,17 @@ export function PatientRegistrationModal({
                       ))}
                     </select>
                   </FormField>
-                  <FormField label="Patient Type" htmlFor="patient-type">
+                  <FormField label="Patient Type" required htmlFor="patient-type">
                     <select
                       id="patient-type"
                       className="lims-input"
                       value={patientType}
                       onChange={(e) =>
-                        setPatientType(e.target.value as PatientType)
+                        setPatientType(e.target.value as PatientType | "")
                       }
+                      required
                     >
+                      <option value="">Select patient type</option>
                       {PATIENT_TYPE_OPTIONS.map((type) => (
                         <option key={type} value={type}>
                           {type}

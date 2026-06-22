@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import {
   Users,
@@ -40,18 +41,35 @@ const TRUST = [
 ];
 
 export function LoginHeroPanel() {
+  const [bgUrl, setBgUrl] = useState('/images/lab-login-bg.svg');
+  const [bgReady, setBgReady] = useState(false);
+
+  useEffect(() => {
+    void fetch('/api/auth/login-background')
+      .then((res) => res.json())
+      .then((payload: { data?: { url?: string } }) => {
+        if (payload.data?.url) setBgUrl(payload.data.url);
+      })
+      .catch(() => {
+        /* keep local fallback */
+      })
+      .finally(() => setBgReady(true));
+  }, []);
+
   return (
     <div className="relative flex min-h-[500px] w-full flex-col overflow-hidden lg:min-h-screen">
-      {/* Real laboratory photograph */}
-      <Image
-        src="/images/lab-background.jpg"
-        alt=""
-        fill
-        priority
-        className="object-cover object-center"
-        sizes="(max-width: 1024px) 100vw, 60vw"
-        aria-hidden
-      />
+      {bgReady && (
+        <Image
+          src={bgUrl}
+          alt=""
+          fill
+          priority
+          className="object-cover object-center"
+          sizes="(max-width: 1024px) 100vw, 60vw"
+          aria-hidden
+          unoptimized={bgUrl.startsWith('https://')}
+        />
+      )}
 
       {/* Light premium overlay — lab stays visible, text stays readable */}
       <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/88 to-white/55" />

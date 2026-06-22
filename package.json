@@ -11,6 +11,7 @@
     "clear-transactional": "node scripts/clear-transactional-data.mjs",
     "reset-admin": "node scripts/reset-admin-user.mjs",
     "seed-roles": "node scripts/seed-roles.mjs",
+    "seed-login-bg": "node scripts/seed-login-background.mjs",
     "test:e2e": "node scripts/e2e-api-test.mjs"
   },
   "dependencies": {

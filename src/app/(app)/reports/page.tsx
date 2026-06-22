@@ -20,7 +20,6 @@ import { formatDateTime } from '@/lib/utils';
 
 type ReportLabSettings = {
   laboratoryName?: string;
-  enableQrVerification?: boolean;
   includeDigitalSignature?: boolean;
 };
 
@@ -48,16 +47,15 @@ function ReportsContent() {
   const pdfOptions = useMemo(
     () => ({
       laboratoryName: labSettings?.laboratoryName,
-      includeQr: labSettings?.enableQrVerification ?? true,
       includeSignature: labSettings?.includeDigitalSignature ?? true,
     }),
     [labSettings],
   );
 
-  const handleDownloadPdf = async (report: PatientReport) => {
+  const handleDownloadPdf = (report: PatientReport) => {
     setPdfLoadingId(report.reportId);
     try {
-      await downloadReportPdf(report, pdfOptions);
+      downloadReportPdf(report, pdfOptions);
     } catch (err) {
       window.alert(err instanceof Error ? err.message : 'Could not generate PDF.');
     } finally {
@@ -168,7 +166,7 @@ function ReportsContent() {
                         </button>
                         <button
                           type="button"
-                          onClick={() => void handleDownloadPdf(report)}
+                          onClick={() => handleDownloadPdf(report)}
                           disabled={pdfLoadingId === report.reportId}
                           className="rounded-md p-2 text-muted transition-colors hover:bg-muted-bg hover:text-primary disabled:opacity-50"
                           aria-label={`Download PDF for report ${report.reportId}`}

@@ -29,7 +29,7 @@ const FEATURES = [
   {
     icon: FileCheck2,
     title: 'Smart Reporting',
-    desc: 'PDF reports with QR verification and digital signatures.',
+    desc: 'PDF reports with digital signatures.',
   },
 ];
 

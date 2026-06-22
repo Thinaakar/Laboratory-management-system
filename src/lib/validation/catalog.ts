@@ -79,7 +79,6 @@ export const generalSettingsSchema = z.object({
   laboratoryName: z.string().min(1),
   contactPhone: z.string().min(1),
   email: z.string().email(),
-  enableQrVerification: z.boolean().default(true),
   requirePathologistApproval: z.boolean().default(true),
   includeDigitalSignature: z.boolean().default(true),
 });

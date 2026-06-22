@@ -1,27 +1,19 @@
 import { jsPDF } from 'jspdf';
-import QRCode from 'qrcode';
 import type { PatientReport } from '@/lib/data/reports';
 import { calculateAgeFromDob } from '@/lib/data/patients-store';
 import { formatDate, formatDateTime } from '@/lib/utils';
 
 export interface ReportPdfOptions {
   laboratoryName?: string;
-  includeQr?: boolean;
   includeSignature?: boolean;
 }
 
-function reportVerifyUrl(reportId: string): string {
-  if (typeof window === 'undefined') return reportId;
-  return `${window.location.origin}/reports?verify=${encodeURIComponent(reportId)}`;
-}
-
-export async function downloadReportPdf(
+export function downloadReportPdf(
   report: PatientReport,
   options: ReportPdfOptions = {},
-): Promise<void> {
+): void {
   const {
     laboratoryName = 'LabCore Diagnostic Center',
-    includeQr = true,
     includeSignature = true,
   } = options;
 
@@ -122,23 +114,5 @@ export async function downloadReportPdf(
     addLine('Digitally signed — LabCore LIMS', 8);
   }
 
-  if (includeQr) {
-    const qrDataUrl = await QRCode.toDataURL(reportVerifyUrl(report.reportId), {
-      width: 200,
-      margin: 1,
-    });
-    const qrSize = 28;
-    const qrX = pageWidth - margin - qrSize;
-    const qrY = doc.internal.pageSize.getHeight() - margin - qrSize - 8;
-    doc.addImage(qrDataUrl, 'PNG', qrX, qrY, qrSize, qrSize);
-    doc.setFontSize(8);
-    doc.setTextColor(100, 116, 139);
-    doc.text('Scan to verify report', qrX, qrY + qrSize + 4);
-  }
-
   doc.save(`${report.reportId}.pdf`);
-}
-
-export async function qrDataUrlForReport(reportId: string): Promise<string> {
-  return QRCode.toDataURL(reportVerifyUrl(reportId), { width: 160, margin: 1 });
 }

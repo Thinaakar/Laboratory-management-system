@@ -37,7 +37,6 @@ export default function SettingsGeneralPage() {
           laboratoryName: settings.laboratoryName,
           contactPhone: settings.contactPhone,
           email: settings.email,
-          enableQrVerification: settings.enableQrVerification,
           requirePathologistApproval: settings.requirePathologistApproval,
           includeDigitalSignature: settings.includeDigitalSignature,
         }),
@@ -112,15 +111,6 @@ export default function SettingsGeneralPage() {
             <label className="flex items-center gap-2">
               <input
                 type="checkbox"
-                checked={settings.enableQrVerification}
-                onChange={(e) => setSettings({ ...settings, enableQrVerification: e.target.checked })}
-                className="rounded border-muted-border"
-              />
-              Enable QR verification on reports
-            </label>
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
                 checked={settings.requirePathologistApproval}
                 onChange={(e) => setSettings({ ...settings, requirePathologistApproval: e.target.checked })}
                 className="rounded border-muted-border"
@@ -155,7 +145,7 @@ export default function SettingsGeneralPage() {
             </div>
             <div className="rounded border border-muted-border p-3 text-sm">
               <p className="font-medium text-slate-900">Report Ready</p>
-              <p className="mt-1 text-muted">Download link with QR verification</p>
+              <p className="mt-1 text-muted">Download link when results are ready</p>
             </div>
           </div>
         </section>

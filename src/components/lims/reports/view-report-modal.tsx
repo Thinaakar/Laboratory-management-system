@@ -1,14 +1,14 @@
 'use client';
 
 import { Download, FileText, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { ModalPortal } from '@/components/lims/modal-portal';
 import { StatusBadge } from '@/components/lims/status-badge';
 import type { PatientReport } from '@/lib/data/reports';
 import { reportDetailCsvRows } from '@/lib/data/reports';
 import { calculateAgeFromDob } from '@/lib/data/patients-store';
 import { downloadCsv } from '@/lib/utils/csv';
-import { downloadReportPdf, qrDataUrlForReport, type ReportPdfOptions } from '@/lib/utils/report-pdf';
+import { downloadReportPdf, type ReportPdfOptions } from '@/lib/utils/report-pdf';
 import { formatDate, formatDateTime } from '@/lib/utils';
 
 interface ViewReportModalProps {
@@ -18,28 +18,20 @@ interface ViewReportModalProps {
 }
 
 export function ViewReportModal({ report, pdfOptions, onClose }: ViewReportModalProps) {
-  const [qrUrl, setQrUrl] = useState<string | null>(null);
   const [pdfLoading, setPdfLoading] = useState(false);
 
   const patientAge = report.patient?.dateOfBirth
     ? calculateAgeFromDob(report.patient.dateOfBirth)
     : undefined;
 
-  const showQr = pdfOptions?.includeQr !== false;
-
-  useEffect(() => {
-    if (!showQr) return;
-    void qrDataUrlForReport(report.reportId).then(setQrUrl).catch(() => setQrUrl(null));
-  }, [report.reportId, showQr]);
-
   const handleExportCsv = () => {
     downloadCsv(`${report.reportId}-report`, reportDetailCsvRows(report));
   };
 
-  const handleExportPdf = async () => {
+  const handleExportPdf = () => {
     setPdfLoading(true);
     try {
-      await downloadReportPdf(report, pdfOptions);
+      downloadReportPdf(report, pdfOptions);
     } catch (err) {
       window.alert(err instanceof Error ? err.message : 'Could not generate PDF.');
     } finally {
@@ -145,20 +137,6 @@ export function ViewReportModal({ report, pdfOptions, onClose }: ViewReportModal
                 </div>
               </div>
 
-              {showQr && qrUrl && (
-                <div className="flex items-center gap-4 rounded-lg border border-muted-border bg-muted-bg/40 p-4">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={qrUrl} alt={`QR code for ${report.reportId}`} className="h-20 w-20 rounded-md bg-white p-1" />
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted">Verification QR</p>
-                    <p className="mt-1 text-sm text-slate-700">
-                      Scan to verify this report. Included on PDF downloads when QR verification is enabled in
-                      settings.
-                    </p>
-                  </div>
-                </div>
-              )}
-
               <div>
                 <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted">
                   Test Results ({report.testCount})
@@ -222,7 +200,7 @@ export function ViewReportModal({ report, pdfOptions, onClose }: ViewReportModal
               </button>
               <button
                 type="button"
-                onClick={() => void handleExportPdf()}
+                onClick={handleExportPdf}
                 disabled={pdfLoading}
                 className="lims-btn-primary"
               >

@@ -40,7 +40,6 @@ export interface LabGeneralSettings {
   laboratoryName: string;
   contactPhone: string;
   email: string;
-  enableQrVerification: boolean;
   requirePathologistApproval: boolean;
   includeDigitalSignature: boolean;
   updatedAt: string;
@@ -51,7 +50,6 @@ export const DEFAULT_GENERAL_SETTINGS: LabGeneralSettings = {
   laboratoryName: 'LabCore Diagnostic Center',
   contactPhone: '+91 22 4000 1234',
   email: 'info@labcore.io',
-  enableQrVerification: true,
   requirePathologistApproval: true,
   includeDigitalSignature: true,
   updatedAt: new Date().toISOString(),
@@ -291,7 +289,6 @@ export async function saveGeneralSettingsDb(
     laboratoryName: input.laboratoryName.trim(),
     contactPhone: input.contactPhone.trim(),
     email: input.email.trim(),
-    enableQrVerification: input.enableQrVerification,
     requirePathologistApproval: input.requirePathologistApproval,
     includeDigitalSignature: input.includeDigitalSignature,
     updatedAt: new Date().toISOString(),

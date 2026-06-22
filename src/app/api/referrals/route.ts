@@ -1,24 +1,20 @@
 import { listReferrals } from '@/lib/firestore/app-data';
-import { ensureSeeded } from '@/lib/firestore/seed';
-import {
-  ensureDb,
-  handleRouteError,
-  jsonData,
-  requireAuth,
-  useRemoteDb,
-} from '@/lib/api/route-helpers';
-import { localApi } from '@/lib/api/local-handlers';
+import { createReferralDb } from '@/lib/firestore/catalog-writes';
+import { referralCreateSchema } from '@/lib/validation/catalog';
+import { catalogCreate, catalogError, catalogList } from '@/lib/api/catalog-route-helpers';
 
 export async function GET(request: Request) {
   try {
-    if (useRemoteDb()) {
-      await ensureDb();
-      requireAuth(request);
-      await ensureSeeded();
-      return jsonData(await listReferrals());
-    }
-    return jsonData(await localApi.catalog.referrals());
+    return await catalogList(request, listReferrals);
   } catch (e) {
-    return handleRouteError(e);
+    return catalogError(e);
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    return await catalogCreate(request, referralCreateSchema, createReferralDb);
+  } catch (e) {
+    return catalogError(e);
   }
 }

@@ -1,26 +1,42 @@
 'use client';
 
+import { useCallback, useEffect, useState } from 'react';
 import { SettingsShell } from '@/components/lims/settings/settings-shell';
 import { StatusBadge } from '@/components/lims/status-badge';
 import { InventoryFormModal } from '@/components/lims/operations/inventory-form-modal';
-import { addInventoryItem, getInventory } from '@/lib/data/inventory-store';
+import { apiJson } from '@/lib/http/client';
 import type { InventoryItem } from '@/lib/types/lims';
 import { formatDate } from '@/lib/utils';
 import { Plus } from 'lucide-react';
-import { useEffect, useState } from 'react';
 
 export default function SettingsInventoryPage() {
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [showModal, setShowModal] = useState(false);
+  const [error, setError] = useState('');
 
-  const refresh = () => setItems(getInventory());
+  const refresh = useCallback(async () => {
+    setError('');
+    try {
+      const res = await apiJson<{ data: InventoryItem[] }>('/api/inventory');
+      setItems(res.data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not load inventory.');
+      setItems([]);
+    }
+  }, []);
 
   useEffect(() => {
-    refresh();
-  }, []);
+    void refresh();
+  }, [refresh]);
 
   return (
     <SettingsShell description="Inventory — reagents, kits, and consumables">
+      {error && (
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
       <div className="mb-4 flex justify-end">
         <button type="button" onClick={() => setShowModal(true)} className="lims-btn-primary">
           <Plus className="h-4 w-4" />
@@ -70,10 +86,10 @@ export default function SettingsInventoryPage() {
       {showModal && (
         <InventoryFormModal
           onClose={() => setShowModal(false)}
-          onSave={(data) => {
-            addInventoryItem(data);
+          onSave={async (data) => {
+            await apiJson('/api/inventory', { method: 'POST', body: JSON.stringify(data) });
             setShowModal(false);
-            refresh();
+            await refresh();
           }}
         />
       )}

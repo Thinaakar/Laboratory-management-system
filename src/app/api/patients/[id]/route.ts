@@ -44,7 +44,7 @@ export async function PATCH(request: Request, { params }: Params) {
     if (useRemoteDb()) {
       await ensureDb();
       const session = requireAuth(request);
-      requirePermission(session, 'patients.update');
+      await requirePermission(session, 'patients.update');
       await ensureSeeded();
       return jsonData(await updatePatientDb(id, body, session));
     }
@@ -61,7 +61,7 @@ export async function DELETE(request: Request, { params }: Params) {
     if (useRemoteDb()) {
       await ensureDb();
       const session = requireAuth(request);
-      requirePermission(session, 'patients.update');
+      await requirePermission(session, 'patients.update');
       await ensureSeeded();
       await deletePatientDb(id, session);
       return jsonData({ ok: true });

@@ -1,39 +1,41 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Plus } from 'lucide-react';
 import { SettingsShell } from '@/components/lims/settings/settings-shell';
 import { SampleTypeFormModal } from '@/components/lims/settings/sample-type-form-modal';
 import { StatusBadge } from '@/components/lims/status-badge';
 import { TableRowActions } from '@/components/lims/table-row-actions';
-import {
-  addSampleType,
-  deleteSampleType,
-  getSampleTypes,
-  updateSampleType,
-} from '@/lib/data/sample-types-store';
-import { getTests } from '@/lib/data/tests-store';
+import { apiJson } from '@/lib/http/client';
 import type { SampleType } from '@/lib/types/lims';
 
 export default function SettingsSampleTypesPage() {
   const [sampleTypes, setSampleTypes] = useState<SampleType[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [viewSampleType, setViewSampleType] = useState<SampleType | null>(null);
-  const [editSampleType, setEditSampleType] = useState<SampleType | null>(null);
+  const [viewType, setViewType] = useState<SampleType | null>(null);
+  const [editType, setEditType] = useState<SampleType | null>(null);
+  const [error, setError] = useState('');
 
-  const refresh = () => setSampleTypes(getSampleTypes());
-
-  useEffect(() => {
-    refresh();
+  const refresh = useCallback(async () => {
+    setError('');
+    try {
+      const res = await apiJson<{ data: SampleType[] }>('/api/sample-types');
+      setSampleTypes(res.data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not load sample types.');
+      setSampleTypes([]);
+    }
   }, []);
 
-  const isUsedByTest = (name: string) => getTests().some((t) => t.sampleType === name);
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
 
-  const handleDelete = (sampleType: SampleType) => {
-    if (!window.confirm(`Delete sample type "${sampleType.name}"?`)) return;
+  const handleDelete = async (type: SampleType) => {
+    if (!window.confirm(`Delete sample type "${type.name}"?`)) return;
     try {
-      deleteSampleType(sampleType.id, isUsedByTest);
-      refresh();
+      await apiJson(`/api/sample-types/${type.id}`, { method: 'DELETE' });
+      await refresh();
     } catch (err) {
       window.alert(err instanceof Error ? err.message : 'Could not delete sample type.');
     }
@@ -41,6 +43,12 @@ export default function SettingsSampleTypesPage() {
 
   return (
     <SettingsShell description="Specimen types — used in the test catalog and sample registration">
+      {error && (
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
       <div className="mb-4 flex justify-end">
         <button type="button" onClick={() => setShowCreateModal(true)} className="lims-btn-primary">
           <Plus className="h-4 w-4" />
@@ -60,26 +68,34 @@ export default function SettingsSampleTypesPage() {
             </tr>
           </thead>
           <tbody>
-            {sampleTypes.map((type) => (
-              <tr key={type.id}>
-                <td className="font-mono text-xs">{type.id}</td>
-                <td className="font-medium text-slate-900">{type.name}</td>
-                <td className="font-mono text-xs">{type.code}</td>
-                <td>
-                  <StatusBadge
-                    label={type.isActive ? 'Active' : 'Inactive'}
-                    variant={type.isActive ? 'success' : 'neutral'}
-                  />
-                </td>
-                <td>
-                  <TableRowActions
-                    onView={() => setViewSampleType(type)}
-                    onEdit={() => setEditSampleType(type)}
-                    onDelete={() => handleDelete(type)}
-                  />
+            {sampleTypes.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="py-8 text-center text-sm text-muted">
+                  No sample types found.
                 </td>
               </tr>
-            ))}
+            ) : (
+              sampleTypes.map((type) => (
+                <tr key={type.id}>
+                  <td className="font-mono text-xs">{type.id}</td>
+                  <td className="font-medium text-slate-900">{type.name}</td>
+                  <td className="font-mono text-xs">{type.code}</td>
+                  <td>
+                    <StatusBadge
+                      label={type.isActive ? 'Active' : 'Inactive'}
+                      variant={type.isActive ? 'success' : 'neutral'}
+                    />
+                  </td>
+                  <td>
+                    <TableRowActions
+                      onView={() => setViewType(type)}
+                      onEdit={() => setEditType(type)}
+                      onDelete={() => void handleDelete(type)}
+                    />
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
@@ -87,32 +103,35 @@ export default function SettingsSampleTypesPage() {
       {showCreateModal && (
         <SampleTypeFormModal
           onClose={() => setShowCreateModal(false)}
-          onSave={(data) => {
-            addSampleType(data);
+          onSave={async (data) => {
+            await apiJson('/api/sample-types', { method: 'POST', body: JSON.stringify(data) });
             setShowCreateModal(false);
-            refresh();
+            await refresh();
           }}
         />
       )}
 
-      {viewSampleType && (
+      {editType && (
         <SampleTypeFormModal
-          sampleType={viewSampleType}
+          sampleType={editType}
+          onClose={() => setEditType(null)}
+          onSave={async (data) => {
+            await apiJson(`/api/sample-types/${editType.id}`, {
+              method: 'PATCH',
+              body: JSON.stringify(data),
+            });
+            setEditType(null);
+            await refresh();
+          }}
+        />
+      )}
+
+      {viewType && (
+        <SampleTypeFormModal
+          sampleType={viewType}
           readOnly
-          onClose={() => setViewSampleType(null)}
+          onClose={() => setViewType(null)}
           onSave={() => {}}
-        />
-      )}
-
-      {editSampleType && (
-        <SampleTypeFormModal
-          sampleType={editSampleType}
-          onClose={() => setEditSampleType(null)}
-          onSave={(data) => {
-            updateSampleType(editSampleType.id, data);
-            setEditSampleType(null);
-            refresh();
-          }}
         />
       )}
     </SettingsShell>

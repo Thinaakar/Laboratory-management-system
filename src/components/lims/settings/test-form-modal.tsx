@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
-import { getDepartments } from '@/lib/data/departments-store';
-import { getActiveSampleTypes } from '@/lib/data/sample-types-store';
+import { useEffect, useState } from 'react';
+import { apiJson } from '@/lib/http/client';
+import type { SampleType, TestDepartment } from '@/lib/types/lims';
 
 interface TestFormModalProps {
   onClose: () => void;
@@ -15,21 +15,40 @@ interface TestFormModalProps {
     unit?: string;
     referenceRange?: string;
     isActive: boolean;
-  }) => void;
+  }) => void | Promise<void>;
 }
 
 export function TestFormModal({ onClose, onSave }: TestFormModalProps) {
-  const departments = getDepartments();
-  const sampleTypes = getActiveSampleTypes();
+  const [departments, setDepartments] = useState<TestDepartment[]>([]);
+  const [sampleTypes, setSampleTypes] = useState<SampleType[]>([]);
   const [name, setName] = useState('');
-  const [departmentId, setDepartmentId] = useState(departments[0]?.id ?? '');
-  const [sampleType, setSampleType] = useState(sampleTypes[0]?.name ?? '');
+  const [departmentId, setDepartmentId] = useState('');
+  const [sampleType, setSampleType] = useState('');
   const [price, setPrice] = useState('');
   const [turnaroundHours, setTurnaroundHours] = useState('4');
   const [unit, setUnit] = useState('');
   const [referenceRange, setReferenceRange] = useState('');
   const [isActive, setIsActive] = useState(true);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    void Promise.all([
+      apiJson<{ data: TestDepartment[] }>('/api/departments'),
+      apiJson<{ data: SampleType[] }>('/api/sample-types'),
+    ])
+      .then(([deptRes, stRes]) => {
+        const depts = deptRes.data;
+        const activeTypes = stRes.data.filter((s) => s.isActive);
+        setDepartments(depts);
+        setSampleTypes(activeTypes);
+        setDepartmentId(depts[0]?.id ?? '');
+        setSampleType(activeTypes[0]?.name ?? '');
+      })
+      .catch(() => {
+        setDepartments([]);
+        setSampleTypes([]);
+      });
+  }, []);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
@@ -39,7 +58,7 @@ export function TestFormModal({ onClose, onSave }: TestFormModalProps) {
 
         <form
           className="mt-4 space-y-4"
-          onSubmit={(e) => {
+          onSubmit={async (e) => {
             e.preventDefault();
             setError('');
             if (!departments.length) {
@@ -51,7 +70,7 @@ export function TestFormModal({ onClose, onSave }: TestFormModalProps) {
               return;
             }
             try {
-              onSave({
+              await onSave({
                 name,
                 departmentId,
                 sampleType,

@@ -21,7 +21,7 @@ export async function POST(request: Request, { params }: Params) {
     if (useRemoteDb()) {
       await ensureDb();
       const session = requireAuth(request);
-      requirePermission(session, 'billing.update');
+      await requirePermission(session, 'billing.update');
       await ensureSeeded();
       return jsonData(await recordInvoicePayment(id, body, session));
     }

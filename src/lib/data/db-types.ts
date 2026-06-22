@@ -6,21 +6,49 @@ export interface DbUser {
   id: string;
   displayName: string;
   email: string;
+  mobile: string;
+  username: string;
   passwordHash: string;
   role: string;
   branchId?: string;
+  department: string;
   status: UserStatus;
   createdAt: string;
 }
 
 export type PublicUser = Omit<DbUser, 'passwordHash'>;
 
-export const DEMO_USERS = [
-  { id: 'USR-ADMIN', email: 'admin@labcore.io', password: 'Admin@123', displayName: 'System Admin', role: 'Admin' },
-  { id: 'USR-RECEP', email: 'reception@labcore.io', password: 'Reception@123', displayName: 'Priya Sharma', role: 'Receptionist' },
-  { id: 'USR-LAB', email: 'lab@labcore.io', password: 'Lab@123', displayName: 'Arun Kumar', role: 'Lab Technician' },
-  { id: 'USR-PATH', email: 'pathologist@labcore.io', password: 'Path@123', displayName: 'Dr. Meera Iyer', role: 'Pathologist' },
-] as const;
+export type RoleStatus = 'Active' | 'Inactive';
+
+export interface DbRole {
+  id: string;
+  name: string;
+  label: string;
+  description: string;
+  permissions: string[];
+  color: string;
+  status: RoleStatus;
+  isSystem?: boolean;
+}
+
+/** Single admin seeded on first Firebase init (password from ADMIN_SEED_PASSWORD env). */
+export const INITIAL_ADMIN = {
+  id: 'USR-ADMIN',
+  email: 'labsystem2026@gmail.com',
+  username: 'admin',
+  displayName: 'Lab System Admin',
+  mobile: '',
+  department: 'Administration',
+  role: 'Admin',
+} as const;
+
+export function getAdminSeedPassword(): string {
+  const password = process.env.ADMIN_SEED_PASSWORD?.trim();
+  if (!password) {
+    throw new Error('ADMIN_SEED_PASSWORD is not set. Add it to .env.local.');
+  }
+  return password;
+}
 
 export const DEFAULT_BRANCH = {
   id: 'BR-MAIN',

@@ -1,9 +1,11 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 import { ModalPortal } from '@/components/lims/modal-portal';
 import { StatusBadge } from '@/components/lims/status-badge';
-import { getBranches } from '@/lib/data/store';
+import { apiJson } from '@/lib/http/client';
+import type { Branch } from '@/lib/types/lims';
 import type { LimsUser } from '@/lib/types/lims';
 import { formatDateTime } from '@/lib/utils';
 
@@ -22,7 +24,17 @@ function DetailRow({ label, value }: { label: string; value: React.ReactNode }) 
 }
 
 export function UserDetailModal({ user, onClose }: UserDetailModalProps) {
-  const branch = getBranches().find((b) => b.id === user.branchId);
+  const [branchName, setBranchName] = useState(user.branchId ?? '—');
+
+  useEffect(() => {
+    if (!user.branchId) return;
+    void apiJson<{ data: Branch[] }>('/api/branches')
+      .then((res) => {
+        const branch = res.data.find((b) => b.id === user.branchId);
+        setBranchName(branch?.name ?? user.branchId ?? '—');
+      })
+      .catch(() => setBranchName(user.branchId ?? '—'));
+  }, [user.branchId]);
 
   return (
     <ModalPortal>
@@ -39,10 +51,13 @@ export function UserDetailModal({ user, onClose }: UserDetailModalProps) {
               </button>
             </div>
             <div className="lims-dialog-body space-y-4">
-              <DetailRow label="Name" value={user.displayName} />
+              <DetailRow label="Full Name" value={user.displayName} />
               <DetailRow label="Email" value={user.email} />
+              <DetailRow label="Mobile" value={user.mobile || '—'} />
+              <DetailRow label="Username" value={<span className="font-mono">{user.username}</span>} />
+              <DetailRow label="Department" value={user.department} />
               <DetailRow label="Role" value={user.role} />
-              <DetailRow label="Branch" value={branch?.name ?? user.branchId ?? '—'} />
+              <DetailRow label="Branch" value={branchName} />
               <DetailRow
                 label="Status"
                 value={

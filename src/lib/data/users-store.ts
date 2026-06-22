@@ -4,10 +4,18 @@ import { logAuditAction } from '@/lib/audit/log-action';
 const STORAGE_KEY = 'labcore-users-v1';
 
 export const seedUsers: LimsUser[] = [
-  { id: 'USR-ADMIN', displayName: 'System Admin', email: 'admin@labcore.io', role: 'Admin', status: 'Active', branchId: 'BR-MAIN', createdAt: '2026-01-01T00:00:00' },
-  { id: 'USR-RECEP', displayName: 'Priya Sharma', email: 'reception@labcore.io', role: 'Receptionist', status: 'Active', branchId: 'BR-MAIN', createdAt: '2026-01-01T00:00:00' },
-  { id: 'USR-LAB', displayName: 'Arun Kumar', email: 'lab@labcore.io', role: 'Lab Technician', status: 'Active', branchId: 'BR-MAIN', createdAt: '2026-01-01T00:00:00' },
-  { id: 'USR-PATH', displayName: 'Dr. Meera Iyer', email: 'pathologist@labcore.io', role: 'Pathologist', status: 'Active', branchId: 'BR-MAIN', createdAt: '2026-01-01T00:00:00' },
+  {
+    id: 'USR-ADMIN',
+    displayName: 'Lab System Admin',
+    email: 'labsystem2026@gmail.com',
+    mobile: '',
+    username: 'admin',
+    department: 'Administration',
+    role: 'Admin',
+    status: 'Active',
+    branchId: 'BR-MAIN',
+    createdAt: '2026-01-01T00:00:00',
+  },
 ];
 
 function cloneSeed(): LimsUser[] {
@@ -43,19 +51,29 @@ export function getUsers(): LimsUser[] {
 export function addUser(input: {
   displayName: string;
   email: string;
+  mobile: string;
+  username: string;
+  department: LimsUser['department'];
   role: UserRole;
   branchId?: string;
   status: LimsUser['status'];
 }): LimsUser {
   const users = getUsers();
   const email = input.email.trim().toLowerCase();
+  const username = input.username.trim().toLowerCase();
   if (users.some((u) => u.email.toLowerCase() === email)) {
     throw new Error('A user with this email already exists.');
+  }
+  if (users.some((u) => u.username.toLowerCase() === username)) {
+    throw new Error('This username is already taken.');
   }
   const created: LimsUser = {
     id: `USR-${Date.now()}`,
     displayName: input.displayName.trim(),
     email: input.email.trim(),
+    mobile: input.mobile.trim(),
+    username,
+    department: input.department,
     role: input.role,
     branchId: input.branchId,
     status: input.status,
@@ -76,7 +94,10 @@ export function updateUser(
   input: {
     displayName: string;
     email: string;
-    role: UserRole;
+    mobile: string;
+    username: string;
+    department: LimsUser['department'];
+    role: LimsUser['role'];
     branchId?: string;
     status: LimsUser['status'];
   },
@@ -86,14 +107,21 @@ export function updateUser(
   if (index === -1) throw new Error('User not found.');
 
   const email = input.email.trim().toLowerCase();
+  const username = input.username.trim().toLowerCase();
   if (users.some((u) => u.id !== id && u.email.toLowerCase() === email)) {
     throw new Error('A user with this email already exists.');
+  }
+  if (users.some((u) => u.id !== id && u.username.toLowerCase() === username)) {
+    throw new Error('This username is already taken.');
   }
 
   const updated: LimsUser = {
     ...users[index],
     displayName: input.displayName.trim(),
     email: input.email.trim(),
+    mobile: input.mobile.trim(),
+    username,
+    department: input.department,
     role: input.role,
     branchId: input.branchId,
     status: input.status,

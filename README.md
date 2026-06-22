@@ -17,14 +17,13 @@ npm run dev
 | http://localhost:3000/login | Staff LIMS sign-in |
 | http://localhost:3000/dashboard | LIMS application |
 
-## Demo credentials
+## Admin login
 
 | Role | Email | Password |
 |------|-------|----------|
-| Admin | admin@labcore.io | Admin@123 |
-| Receptionist | reception@labcore.io | Reception@123 |
-| Lab Technician | lab@labcore.io | Lab@123 |
-| Pathologist | pathologist@labcore.io | Path@123 |
+| Admin | labsystem2026@gmail.com | Set via `ADMIN_SEED_PASSWORD` in `.env.local` |
+
+After changing the admin password, run `npm run reset-admin` to update Firestore.
 
 ## Design system
 
@@ -56,7 +55,8 @@ Use the **Workflow** strip on the dashboard to navigate between steps.
 1. Add `src/config/ServiceAccountKey.json`
 2. Copy `.env.example` → `.env.local`
 3. Verify `/api/health` → `"firebase": "connected"`
-4. First API call auto-seeds demo users and lab data
+4. Set `ADMIN_SEED_PASSWORD` in `.env.local`, then run `npm run reset-admin`
+5. First API call auto-seeds master catalog data (tests, packages, etc.)
 
 See [docs/guide.md](docs/guide.md) for full API integration steps.
 

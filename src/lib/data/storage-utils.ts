@@ -47,7 +47,6 @@ export const LABCORE_STORAGE_KEYS = [
   'labcore-suppliers-v1',
   'labcore-equipment-v1',
   'labcore-audit-v1',
-  'labcore-roles-v1',
   'labcore-users-v1',
 ] as const;
 

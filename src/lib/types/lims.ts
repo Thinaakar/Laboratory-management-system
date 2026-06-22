@@ -246,7 +246,10 @@ export interface LimsUser {
   id: string;
   displayName: string;
   email: string;
-  role: UserRole;
+  mobile: string;
+  username: string;
+  role: UserRole | string;
+  department: string;
   status: 'Active' | 'Inactive';
   branchId?: string;
   createdAt: string;

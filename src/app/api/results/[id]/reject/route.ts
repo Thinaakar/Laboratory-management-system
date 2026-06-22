@@ -21,7 +21,7 @@ export async function POST(request: Request, { params }: Params) {
     if (useRemoteDb()) {
       await ensureDb();
       const session = requireAuth(request);
-      requirePermission(session, 'reports.approve');
+      await requirePermission(session, 'reports.approve');
       await ensureSeeded();
       return jsonData(await rejectResult(id, body, session));
     }

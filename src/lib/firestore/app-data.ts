@@ -1,7 +1,7 @@
 import type { Firestore } from 'firebase-admin/firestore';
 import { getAdminFirestore } from '@/lib/firebase/admin';
 import { appCollection } from '@/lib/firebase/collections';
-import type { DbUser, PublicUser } from '@/lib/data/db-types';
+import type { DbUser, DbRole, PublicUser } from '@/lib/data/db-types';
 import type {
   Appointment,
   AuditLogEntry,
@@ -23,8 +23,11 @@ import type {
   TestDepartment,
   TestResult,
 } from '@/lib/types/lims';
+import { DEFAULT_ROLE_PERMISSIONS } from '@/lib/auth/permissions';
 import { buildAnalyticsSnapshot, type AnalyticsPeriod } from '@/lib/data/analytics';
 import { buildPatientReportsFromData } from '@/lib/data/reports';
+import type { LabGeneralSettings } from '@/lib/firestore/catalog-writes';
+import { DEFAULT_GENERAL_SETTINGS } from '@/lib/firestore/catalog-writes';
 
 function db(): Firestore {
   return getAdminFirestore();
@@ -56,7 +59,12 @@ export async function isCollectionEmpty(table: string): Promise<boolean> {
 
 export function toPublicUser(user: DbUser): PublicUser {
   const { passwordHash: _removed, ...rest } = user;
-  return rest;
+  return {
+    ...rest,
+    mobile: rest.mobile ?? '',
+    username: rest.username ?? rest.email.split('@')[0] ?? '',
+    department: rest.department ?? 'Administration',
+  };
 }
 
 // ── Users ─────────────────────────────────────────────────────
@@ -77,6 +85,48 @@ export async function getUserByEmail(email: string): Promise<DbUser | null> {
   if (snap.empty) return null;
   const doc = snap.docs[0];
   return docData<DbUser>(doc.id, doc.data() as Record<string, unknown>);
+}
+
+export async function getUserByUsername(username: string): Promise<DbUser | null> {
+  const normalized = username.trim().toLowerCase();
+  const snap = await appCollection(db(), 'users')
+    .where('username', '==', normalized)
+    .limit(1)
+    .get();
+  if (snap.empty) return null;
+  const doc = snap.docs[0];
+  return docData<DbUser>(doc.id, doc.data() as Record<string, unknown>);
+}
+
+/** Resolve login by email address or username. */
+export async function getUserByLogin(identifier: string): Promise<DbUser | null> {
+  const trimmed = identifier.trim();
+  if (trimmed.includes('@')) {
+    return getUserByEmail(trimmed);
+  }
+  return getUserByUsername(trimmed);
+}
+
+// ── Roles ─────────────────────────────────────────────────────
+
+export async function listRoles(): Promise<DbRole[]> {
+  return listDocs<DbRole>('roles', (a, b) => a.label.localeCompare(b.label));
+}
+
+export async function getRoleById(id: string): Promise<DbRole | null> {
+  return getDoc<DbRole>('roles', id);
+}
+
+export async function getRoleByName(name: string): Promise<DbRole | null> {
+  const normalized = name.trim();
+  const roles = await listRoles();
+  return roles.find((r) => r.name === normalized || r.label === normalized) ?? null;
+}
+
+export async function resolveRolePermissions(roleName: string): Promise<string[]> {
+  const role = await getRoleByName(roleName);
+  if (role) return role.permissions;
+  return DEFAULT_ROLE_PERMISSIONS[roleName] ?? [];
 }
 
 // ── Patients ──────────────────────────────────────────────────
@@ -119,12 +169,25 @@ export async function listSampleTypes(): Promise<SampleType[]> {
   return listDocs<SampleType>('sample_types', (a, b) => a.name.localeCompare(b.name));
 }
 
+export async function getSampleType(id: string): Promise<SampleType | null> {
+  return getDoc<SampleType>('sample_types', id);
+}
+
 export async function listReferrals(): Promise<DoctorReferral[]> {
   return listDocs<DoctorReferral>('referrals', (a, b) => a.doctorName.localeCompare(b.doctorName));
 }
 
 export async function listBranches(): Promise<Branch[]> {
   return listDocs<Branch>('branches', (a, b) => a.name.localeCompare(b.name));
+}
+
+export async function getDepartment(id: string): Promise<TestDepartment | null> {
+  return getDoc<TestDepartment>('departments', id);
+}
+
+export async function getGeneralSettings(): Promise<LabGeneralSettings | null> {
+  const doc = await getDoc<LabGeneralSettings>('lab_settings', 'general');
+  return doc;
 }
 
 // ── Orders ────────────────────────────────────────────────────
@@ -259,7 +322,10 @@ export async function getAnalyticsFromDb(period: AnalyticsPeriod = 'overall') {
           id: u.id,
           displayName: u.displayName,
           email: u.email,
+          mobile: u.mobile ?? '',
+          username: u.username ?? '',
           role: u.role as LimsUser['role'],
+          department: u.department ?? 'Administration',
           status: u.status,
           branchId: u.branchId,
           createdAt: u.createdAt,
@@ -270,6 +336,11 @@ export async function getAnalyticsFromDb(period: AnalyticsPeriod = 'overall') {
     },
     period,
   );
+}
+
+export async function getGeneralSettingsOrDefault(): Promise<LabGeneralSettings> {
+  const settings = await getGeneralSettings();
+  return settings ?? DEFAULT_GENERAL_SETTINGS;
 }
 
 export async function listReports() {

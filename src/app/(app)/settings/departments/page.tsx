@@ -1,24 +1,40 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Plus } from 'lucide-react';
 import { SettingsShell } from '@/components/lims/settings/settings-shell';
 import { DepartmentFormModal } from '@/components/lims/settings/department-form-modal';
-import { addDepartment, getDepartments } from '@/lib/data/departments-store';
+import { apiJson } from '@/lib/http/client';
 import type { TestDepartment } from '@/lib/types/lims';
 
 export default function SettingsDepartmentsPage() {
   const [departments, setDepartments] = useState<TestDepartment[]>([]);
   const [showModal, setShowModal] = useState(false);
+  const [error, setError] = useState('');
 
-  const refresh = () => setDepartments(getDepartments());
+  const refresh = useCallback(async () => {
+    setError('');
+    try {
+      const res = await apiJson<{ data: TestDepartment[] }>('/api/departments');
+      setDepartments(res.data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not load departments.');
+      setDepartments([]);
+    }
+  }, []);
 
   useEffect(() => {
-    refresh();
-  }, []);
+    void refresh();
+  }, [refresh]);
 
   return (
     <SettingsShell description="Laboratory departments — organize tests by specialty">
+      {error && (
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
       <div className="mb-4 flex justify-end">
         <button type="button" onClick={() => setShowModal(true)} className="lims-btn-primary">
           <Plus className="h-4 w-4" />
@@ -50,10 +66,10 @@ export default function SettingsDepartmentsPage() {
       {showModal && (
         <DepartmentFormModal
           onClose={() => setShowModal(false)}
-          onSave={(data) => {
-            addDepartment(data);
+          onSave={async (data) => {
+            await apiJson('/api/departments', { method: 'POST', body: JSON.stringify(data) });
             setShowModal(false);
-            refresh();
+            await refresh();
           }}
         />
       )}

@@ -1,25 +1,41 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Plus } from 'lucide-react';
 import { SettingsShell } from '@/components/lims/settings/settings-shell';
 import { DoctorFormModal } from '@/components/lims/settings/doctor-form-modal';
-import { addReferral, getReferrals } from '@/lib/data/referrals-store';
+import { apiJson } from '@/lib/http/client';
 import { formatCurrency } from '@/lib/utils';
 import type { DoctorReferral } from '@/lib/types/lims';
 
 export default function SettingsDoctorsPage() {
   const [doctors, setDoctors] = useState<DoctorReferral[]>([]);
   const [showModal, setShowModal] = useState(false);
+  const [error, setError] = useState('');
 
-  const refresh = () => setDoctors(getReferrals());
+  const refresh = useCallback(async () => {
+    setError('');
+    try {
+      const res = await apiJson<{ data: DoctorReferral[] }>('/api/referrals');
+      setDoctors(res.data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not load doctors.');
+      setDoctors([]);
+    }
+  }, []);
 
   useEffect(() => {
-    refresh();
-  }, []);
+    void refresh();
+  }, [refresh]);
 
   return (
     <SettingsShell description="Referring doctors — used in appointments and orders">
+      {error && (
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
       <div className="mb-4 flex justify-end">
         <button type="button" onClick={() => setShowModal(true)} className="lims-btn-primary">
           <Plus className="h-4 w-4" />
@@ -57,10 +73,10 @@ export default function SettingsDoctorsPage() {
       {showModal && (
         <DoctorFormModal
           onClose={() => setShowModal(false)}
-          onSave={(data) => {
-            addReferral(data);
+          onSave={async (data) => {
+            await apiJson('/api/referrals', { method: 'POST', body: JSON.stringify(data) });
             setShowModal(false);
-            refresh();
+            await refresh();
           }}
         />
       )}

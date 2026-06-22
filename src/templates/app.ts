@@ -43,6 +43,18 @@ export const appTemplate = {
       ],
     },
     {
+      key: 'roles',
+      label: 'Roles',
+      order: 12,
+      fields: [
+        { key: 'name', label: 'Name', type: 'string', required: true },
+        { key: 'label', label: 'Label', type: 'string', required: true },
+        { key: 'description', label: 'Description', type: 'string', required: true },
+        { key: 'permissions', label: 'Permissions', type: 'string', required: true },
+        { key: 'status', label: 'Status', type: 'string', required: true },
+      ],
+    },
+    {
       key: 'patients',
       label: 'Patients',
       order: 20,
@@ -74,6 +86,34 @@ export const appTemplate = {
         { key: 'price', label: 'Price', type: 'number', required: true },
         { key: 'sampleType', label: 'Sample Type', type: 'string', required: true },
         { key: 'turnaroundHours', label: 'TAT Hours', type: 'number', required: true },
+      ],
+    },
+    {
+      key: 'packages',
+      label: 'Health Packages',
+      order: 32,
+      fields: [
+        { key: 'name', label: 'Name', type: 'string', required: true },
+        { key: 'price', label: 'Price', type: 'number', required: true },
+      ],
+    },
+    {
+      key: 'sample_types',
+      label: 'Sample Types',
+      order: 28,
+      fields: [
+        { key: 'name', label: 'Name', type: 'string', required: true },
+        { key: 'code', label: 'Code', type: 'string', required: true },
+        { key: 'isActive', label: 'Active', type: 'boolean', required: true },
+      ],
+    },
+    {
+      key: 'referrals',
+      label: 'Referring Doctors',
+      order: 27,
+      fields: [
+        { key: 'doctorName', label: 'Doctor', type: 'string', required: true },
+        { key: 'specialty', label: 'Specialty', type: 'string' },
       ],
     },
     {
@@ -118,6 +158,43 @@ export const appTemplate = {
         { key: 'amount', label: 'Amount', type: 'number', required: true },
         { key: 'paidAmount', label: 'Paid', type: 'number', required: true },
         { key: 'status', label: 'Status', type: 'string', required: true },
+      ],
+    },
+    {
+      key: 'inventory',
+      label: 'Inventory',
+      order: 75,
+      fields: [
+        { key: 'name', label: 'Name', type: 'string', required: true },
+        { key: 'category', label: 'Category', type: 'string', required: true },
+        { key: 'quantity', label: 'Quantity', type: 'number', required: true },
+      ],
+    },
+    {
+      key: 'suppliers',
+      label: 'Suppliers',
+      order: 76,
+      fields: [
+        { key: 'name', label: 'Name', type: 'string', required: true },
+        { key: 'contact', label: 'Contact', type: 'string', required: true },
+      ],
+    },
+    {
+      key: 'equipment',
+      label: 'Equipment',
+      order: 77,
+      fields: [
+        { key: 'name', label: 'Name', type: 'string', required: true },
+        { key: 'status', label: 'Status', type: 'string', required: true },
+      ],
+    },
+    {
+      key: 'lab_settings',
+      label: 'Lab Settings',
+      order: 4,
+      fields: [
+        { key: 'laboratoryName', label: 'Lab Name', type: 'string', required: true },
+        { key: 'email', label: 'Email', type: 'string', required: true },
       ],
     },
     {

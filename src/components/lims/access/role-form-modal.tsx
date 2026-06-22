@@ -13,7 +13,7 @@ interface RoleFormModalProps {
     status: RoleStatus;
     color: string;
     permissions: string[];
-  }) => void;
+  }) => void | Promise<void>;
 }
 
 const COLORS = ['primary', 'blue', 'emerald', 'violet', 'orange'];
@@ -32,9 +32,9 @@ export function RoleFormModal({ mode, role, onClose, onSave }: RoleFormModalProp
         </h3>
         <form
           className="mt-4 space-y-4"
-          onSubmit={(e) => {
+          onSubmit={async (e) => {
             e.preventDefault();
-            onSave({
+            await onSave({
               label: label.trim(),
               description: description.trim(),
               status,

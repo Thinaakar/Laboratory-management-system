@@ -5,8 +5,7 @@ import { X } from 'lucide-react';
 import { ModalPortal } from '@/components/lims/modal-portal';
 import { FormField } from '@/components/lims/form-field';
 import { getLimsData } from '@/lib/api/use-lims-data';
-import type { Appointment, OrderPriority } from '@/lib/types/lims';
-import { getReferrals } from '@/lib/data/store';
+import type { Appointment, DoctorReferral, OrderPriority } from '@/lib/types/lims';
 
 const PRIORITY_OPTIONS: OrderPriority[] = ['Normal', 'Urgent', 'STAT'];
 const STATUS_OPTIONS: Appointment['status'][] = ['Scheduled', 'Completed', 'Cancelled', 'No-Show'];
@@ -18,7 +17,7 @@ interface EditAppointmentModalProps {
 }
 
 export function EditAppointmentModal({ appointment, onClose, onSaved }: EditAppointmentModalProps) {
-  const referrals = getReferrals();
+  const [referrals, setReferrals] = useState<DoctorReferral[]>([]);
   const [scheduledAt, setScheduledAt] = useState('');
   const [appointmentType, setAppointmentType] = useState<Appointment['type']>('Scheduled');
   const [status, setStatus] = useState<Appointment['status']>('Scheduled');
@@ -26,6 +25,18 @@ export function EditAppointmentModal({ appointment, onClose, onSaved }: EditAppo
   const [priority, setPriority] = useState<OrderPriority>('Normal');
   const [notes, setNotes] = useState('');
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const api = await getLimsData();
+      const list = await api.catalog.referrals();
+      if (!cancelled) setReferrals(list);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     setScheduledAt(appointment.scheduledAt.slice(0, 16));

@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 import { getAdminFirestore, isFirebaseConfigured } from '@/lib/firebase/admin';
 import { ensureAppTables } from '@/lib/firebase/collections';
 import { getSessionFromRequest, type SessionPayload } from '@/lib/auth/session';
-import { DEFAULT_ROLE_PERMISSIONS, hasPermission } from '@/lib/auth/permissions';
+import { hasPermission } from '@/lib/auth/permissions';
+import { resolveRolePermissions } from '@/lib/firestore/app-data';
 import { apiError } from '@/lib/http/api-error';
 
 export function jsonData<T>(data: T, status = 200) {
@@ -24,8 +25,8 @@ export function requireAuth(request: Request): SessionPayload {
   return session;
 }
 
-export function requirePermission(session: SessionPayload, permission: string): void {
-  const rolePerms = DEFAULT_ROLE_PERMISSIONS[session.role] ?? [];
+export async function requirePermission(session: SessionPayload, permission: string): Promise<void> {
+  const rolePerms = await resolveRolePermissions(session.role);
   if (!hasPermission(rolePerms, permission)) {
     throw new AuthError('Forbidden', 403);
   }

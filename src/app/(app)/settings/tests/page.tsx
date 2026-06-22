@@ -1,26 +1,42 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Plus } from 'lucide-react';
 import { SettingsShell } from '@/components/lims/settings/settings-shell';
 import { TestFormModal } from '@/components/lims/settings/test-form-modal';
 import { StatusBadge } from '@/components/lims/status-badge';
-import { addTest, getTests } from '@/lib/data/tests-store';
+import { apiJson } from '@/lib/http/client';
 import { formatCurrency } from '@/lib/utils';
 import type { LabTest } from '@/lib/types/lims';
 
 export default function SettingsTestsPage() {
   const [tests, setTests] = useState<LabTest[]>([]);
   const [showModal, setShowModal] = useState(false);
+  const [error, setError] = useState('');
 
-  const refresh = () => setTests(getTests());
+  const refresh = useCallback(async () => {
+    setError('');
+    try {
+      const res = await apiJson<{ data: LabTest[] }>('/api/tests');
+      setTests(res.data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not load tests.');
+      setTests([]);
+    }
+  }, []);
 
   useEffect(() => {
-    refresh();
-  }, []);
+    void refresh();
+  }, [refresh]);
 
   return (
     <SettingsShell description="Test catalog — pricing, sample types, and reference ranges">
+      {error && (
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
       <div className="mb-4 flex justify-end">
         <button type="button" onClick={() => setShowModal(true)} className="lims-btn-primary">
           <Plus className="h-4 w-4" />
@@ -69,10 +85,10 @@ export default function SettingsTestsPage() {
       {showModal && (
         <TestFormModal
           onClose={() => setShowModal(false)}
-          onSave={(data) => {
-            addTest(data);
+          onSave={async (data) => {
+            await apiJson('/api/tests', { method: 'POST', body: JSON.stringify(data) });
             setShowModal(false);
-            refresh();
+            await refresh();
           }}
         />
       )}

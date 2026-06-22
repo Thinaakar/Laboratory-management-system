@@ -1,29 +1,53 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Save } from 'lucide-react';
 import { UserManagementShell } from '@/components/lims/access/user-management-shell';
 import { PermissionsMatrix } from '@/components/lims/access/permissions-matrix';
 import { ALL_PERMISSION_IDS } from '@/lib/auth/permissions';
-import { getRoles, updateRolePermissions, type LimsRole } from '@/lib/data/roles-store';
+import type { LimsRole } from '@/lib/data/roles-store';
+import { apiJson } from '@/lib/http/client';
+import type { DbRole } from '@/lib/data/db-types';
 import { cn } from '@/lib/utils';
+
+function toLimsRole(role: DbRole): LimsRole {
+  return {
+    id: role.id,
+    name: role.name,
+    label: role.label,
+    description: role.description,
+    permissions: [...role.permissions],
+    color: role.color,
+    status: role.status,
+    isSystem: role.isSystem,
+  };
+}
 
 export default function AdminPermissionsPage() {
   const [roles, setRoles] = useState<LimsRole[]>([]);
   const [selectedRoleId, setSelectedRoleId] = useState('');
   const [draft, setDraft] = useState<string[]>([]);
   const [saved, setSaved] = useState(false);
+  const [loadError, setLoadError] = useState('');
+  const [saving, setSaving] = useState(false);
 
-  const refresh = () => {
-    const list = getRoles().filter((r) => r.status === 'Active');
-    setRoles(list);
-    setSelectedRoleId((current) => current || list[0]?.id || '');
-  };
+  const refresh = useCallback(async () => {
+    setLoadError('');
+    try {
+      const res = await apiJson<{ data: DbRole[] }>('/api/roles');
+      const list = res.data.map(toLimsRole).filter((r) => r.status === 'Active');
+      setRoles(list);
+      setSelectedRoleId((current) => current || list[0]?.id || '');
+    } catch (err) {
+      setLoadError(err instanceof Error ? err.message : 'Could not load roles.');
+      setRoles([]);
+    }
+  }, []);
 
   useEffect(() => {
-    refresh();
-  }, []);
+    void refresh();
+  }, [refresh]);
 
   useEffect(() => {
     const role = roles.find((r) => r.id === selectedRoleId);
@@ -33,16 +57,32 @@ export default function AdminPermissionsPage() {
 
   const role = roles.find((r) => r.id === selectedRoleId);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!role) return;
-    updateRolePermissions(role.id, draft);
-    refresh();
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    setSaving(true);
+    try {
+      await apiJson(`/api/roles/${role.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ permissions: draft }),
+      });
+      await refresh();
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : 'Could not save permissions.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
     <UserManagementShell>
+      {loadError && (
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {loadError}
+        </div>
+      )}
+
       <div className="lims-card p-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
@@ -75,9 +115,14 @@ export default function AdminPermissionsPage() {
                   <span className="text-sm font-normal text-muted"> / {ALL_PERMISSION_IDS.length}</span>
                 </p>
               </div>
-              <button type="button" onClick={handleSave} className="lims-btn-primary">
+              <button
+                type="button"
+                onClick={() => void handleSave()}
+                className="lims-btn-primary"
+                disabled={saving}
+              >
                 <Save className="h-4 w-4" />
-                {saved ? 'Saved' : 'Save Permissions'}
+                {saving ? 'Saving…' : saved ? 'Saved' : 'Save Permissions'}
               </button>
             </div>
           )}

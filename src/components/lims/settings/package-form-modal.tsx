@@ -1,20 +1,21 @@
 'use client';
 
 import { useState } from 'react';
-import { getTests } from '@/lib/data/tests-store';
+import type { LabTest } from '@/lib/types/lims';
 
 interface PackageFormModalProps {
+  tests: LabTest[];
   onClose: () => void;
   onSave: (data: {
     name: string;
     testIds: string[];
     price: number;
     description?: string;
-  }) => void;
+  }) => void | Promise<void>;
 }
 
-export function PackageFormModal({ onClose, onSave }: PackageFormModalProps) {
-  const tests = getTests().filter((t) => t.isActive);
+export function PackageFormModal({ tests: allTests, onClose, onSave }: PackageFormModalProps) {
+  const tests = allTests.filter((t) => t.isActive);
   const [name, setName] = useState('');
   const [testIds, setTestIds] = useState<string[]>([]);
   const [price, setPrice] = useState('');
@@ -33,7 +34,7 @@ export function PackageFormModal({ onClose, onSave }: PackageFormModalProps) {
 
         <form
           className="mt-4 space-y-4"
-          onSubmit={(e) => {
+          onSubmit={async (e) => {
             e.preventDefault();
             setError('');
             if (!testIds.length) {
@@ -41,7 +42,7 @@ export function PackageFormModal({ onClose, onSave }: PackageFormModalProps) {
               return;
             }
             try {
-              onSave({
+              await onSave({
                 name,
                 testIds,
                 price: Number(price),

@@ -1,11 +1,12 @@
 import { getAdminFirestore } from '@/lib/firebase/admin';
 import { appCollection } from '@/lib/firebase/collections';
 import { hashPassword } from '@/lib/auth/password-server';
-import { DEMO_USERS, DEFAULT_BRANCH } from '@/lib/data/db-types';
+import { INITIAL_ADMIN, DEFAULT_BRANCH, getAdminSeedPassword } from '@/lib/data/db-types';
 import type { DbUser } from '@/lib/data/db-types';
 import { isCollectionEmpty } from '@/lib/firestore/app-data';
 import { seedDocument } from '@/lib/firestore/app-writes';
 import { seedDepartments } from '@/lib/data/departments-store';
+import { SEED_ROLES } from '@/lib/data/seed-roles';
 import { seedPackages } from '@/lib/data/packages-store';
 import { seedSampleTypes } from '@/lib/data/sample-types-store';
 import { seedTests } from '@/lib/data/tests-store';
@@ -23,6 +24,7 @@ export const TRANSACTIONAL_TABLES = [
 /** Master catalog + auth — seeded once on empty database. */
 export const MASTER_TABLES = [
   'users',
+  'roles',
   'branches',
   'departments',
   'tests',
@@ -30,24 +32,50 @@ export const MASTER_TABLES = [
   'sample_types',
 ] as const;
 
-async function seedUsers(): Promise<void> {
-  for (const demo of DEMO_USERS) {
-    const user: DbUser = {
-      id: demo.id,
-      displayName: demo.displayName,
-      email: demo.email.toLowerCase(),
-      passwordHash: hashPassword(demo.password),
-      role: demo.role,
-      branchId: DEFAULT_BRANCH.id,
-      status: 'Active',
-      createdAt: new Date().toISOString(),
-    };
-    await seedDocument('users', user.id, user as unknown as Record<string, unknown>);
+async function seedRoles(): Promise<void> {
+  for (const role of SEED_ROLES) {
+    await seedDocument('roles', role.id, role as unknown as Record<string, unknown>);
   }
+}
+
+export async function ensureRolesSeeded(): Promise<void> {
+  const rolesEmpty = await isCollectionEmpty('roles');
+  if (!rolesEmpty) return;
+  await seedRoles();
+}
+
+async function seedUsers(): Promise<void> {
+  const user: DbUser = {
+    id: INITIAL_ADMIN.id,
+    displayName: INITIAL_ADMIN.displayName,
+    email: INITIAL_ADMIN.email.toLowerCase(),
+    mobile: INITIAL_ADMIN.mobile,
+    username: INITIAL_ADMIN.username,
+    passwordHash: hashPassword(getAdminSeedPassword()),
+    role: INITIAL_ADMIN.role,
+    branchId: DEFAULT_BRANCH.id,
+    department: INITIAL_ADMIN.department,
+    status: 'Active',
+    createdAt: new Date().toISOString(),
+  };
+  await seedDocument('users', user.id, user as unknown as Record<string, unknown>);
+}
+
+export async function replaceUsersWithInitialAdmin(): Promise<{ deleted: number; email: string }> {
+  const db = getAdminFirestore();
+  const snap = await appCollection(db, 'users').get();
+  if (!snap.empty) {
+    const batch = db.batch();
+    snap.docs.forEach((doc) => batch.delete(doc.ref));
+    await batch.commit();
+  }
+  await seedUsers();
+  return { deleted: snap.size, email: INITIAL_ADMIN.email };
 }
 
 async function runMasterSeed(): Promise<string> {
   await seedDocument('branches', DEFAULT_BRANCH.id, DEFAULT_BRANCH);
+  await seedRoles();
   await seedUsers();
 
   for (const dept of seedDepartments) {
@@ -63,11 +91,12 @@ async function runMasterSeed(): Promise<string> {
     await seedDocument('sample_types', sampleType.id, sampleType as unknown as Record<string, unknown>);
   }
 
-  return `Seeded master data: ${DEMO_USERS.length} users, ${seedTests.length} tests, ${seedPackages.length} packages.`;
+  return `Seeded master data: 1 admin user, ${SEED_ROLES.length} roles, ${seedTests.length} tests, ${seedPackages.length} packages.`;
 }
 
 export async function ensureSeeded(): Promise<{ seeded: boolean; message: string }> {
   const usersEmpty = await isCollectionEmpty('users');
+  await ensureRolesSeeded();
   if (!usersEmpty) {
     return { seeded: false, message: 'Database already initialized.' };
   }

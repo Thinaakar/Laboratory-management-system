@@ -1,26 +1,42 @@
 'use client';
 
+import { useCallback, useEffect, useState } from 'react';
 import { SettingsShell } from '@/components/lims/settings/settings-shell';
 import { StatusBadge } from '@/components/lims/status-badge';
 import { EquipmentFormModal } from '@/components/lims/operations/equipment-form-modal';
-import { addEquipment, getEquipment } from '@/lib/data/equipment-store';
+import { apiJson } from '@/lib/http/client';
 import type { Equipment } from '@/lib/types/lims';
 import { formatDate } from '@/lib/utils';
 import { Plus } from 'lucide-react';
-import { useEffect, useState } from 'react';
 
 export default function SettingsEquipmentPage() {
   const [equipment, setEquipment] = useState<Equipment[]>([]);
   const [showModal, setShowModal] = useState(false);
+  const [error, setError] = useState('');
 
-  const refresh = () => setEquipment(getEquipment());
+  const refresh = useCallback(async () => {
+    setError('');
+    try {
+      const res = await apiJson<{ data: Equipment[] }>('/api/equipment');
+      setEquipment(res.data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not load equipment.');
+      setEquipment([]);
+    }
+  }, []);
 
   useEffect(() => {
-    refresh();
-  }, []);
+    void refresh();
+  }, [refresh]);
 
   return (
     <SettingsShell description="Equipment — analyzers, calibration, and maintenance">
+      {error && (
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
       <div className="mb-4 flex justify-end">
         <button type="button" onClick={() => setShowModal(true)} className="lims-btn-primary">
           <Plus className="h-4 w-4" />
@@ -72,10 +88,10 @@ export default function SettingsEquipmentPage() {
       {showModal && (
         <EquipmentFormModal
           onClose={() => setShowModal(false)}
-          onSave={(data) => {
-            addEquipment(data);
+          onSave={async (data) => {
+            await apiJson('/api/equipment', { method: 'POST', body: JSON.stringify(data) });
             setShowModal(false);
-            refresh();
+            await refresh();
           }}
         />
       )}

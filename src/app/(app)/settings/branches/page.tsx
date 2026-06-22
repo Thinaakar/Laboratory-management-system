@@ -1,25 +1,41 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Plus } from 'lucide-react';
 import { SettingsShell } from '@/components/lims/settings/settings-shell';
 import { BranchFormModal } from '@/components/lims/settings/branch-form-modal';
 import { StatusBadge } from '@/components/lims/status-badge';
-import { addBranch, getBranches } from '@/lib/data/branches-store';
+import { apiJson } from '@/lib/http/client';
 import type { Branch } from '@/lib/types/lims';
 
 export default function SettingsBranchesPage() {
   const [branches, setBranches] = useState<Branch[]>([]);
   const [showModal, setShowModal] = useState(false);
+  const [error, setError] = useState('');
 
-  const refresh = () => setBranches(getBranches());
+  const refresh = useCallback(async () => {
+    setError('');
+    try {
+      const res = await apiJson<{ data: Branch[] }>('/api/branches');
+      setBranches(res.data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not load branches.');
+      setBranches([]);
+    }
+  }, []);
 
   useEffect(() => {
-    refresh();
-  }, []);
+    void refresh();
+  }, [refresh]);
 
   return (
     <SettingsShell description="Multi-location laboratory branches">
+      {error && (
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
       <div className="mb-4 flex justify-end">
         <button type="button" onClick={() => setShowModal(true)} className="lims-btn-primary">
           <Plus className="h-4 w-4" />
@@ -60,10 +76,10 @@ export default function SettingsBranchesPage() {
       {showModal && (
         <BranchFormModal
           onClose={() => setShowModal(false)}
-          onSave={(data) => {
-            addBranch(data);
+          onSave={async (data) => {
+            await apiJson('/api/branches', { method: 'POST', body: JSON.stringify(data) });
             setShowModal(false);
-            refresh();
+            await refresh();
           }}
         />
       )}

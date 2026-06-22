@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Eye, EyeOff, Loader2, ShieldCheck } from 'lucide-react';
-import { saveSession, SUPER_ADMIN_DEMO, validateLogin } from '@/lib/auth/demo-users';
+import { saveSession } from '@/lib/auth/demo-users';
 import { logAuditAction } from '@/lib/audit/log-action';
 
 const REMEMBER_KEY = 'labcore-remember-email';
@@ -46,13 +46,6 @@ export function LoginFormCard() {
     setTimeout(() => router.push('/dashboard'), 600);
   };
 
-  const fillSuperAdminDemo = () => {
-    setEmail(SUPER_ADMIN_DEMO.email);
-    setPassword(SUPER_ADMIN_DEMO.password);
-    setError('');
-    setSuccess('');
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -80,19 +73,8 @@ export function LoginFormCard() {
         return;
       }
 
-      const demo = validateLogin(email, password);
-      if (demo) {
-        completeSignIn({ displayName: demo.name, email: demo.email, role: demo.role });
-        return;
-      }
-
       setError(json.error ?? 'Invalid email or password. Please try again.');
     } catch {
-      const demo = validateLogin(email, password);
-      if (demo) {
-        completeSignIn({ displayName: demo.name, email: demo.email, role: demo.role });
-        return;
-      }
       setError('Unable to connect. Please check your network and try again.');
     } finally {
       setLoading(false);
@@ -155,7 +137,7 @@ export function LoginFormCard() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               autoComplete="email"
-              placeholder="name@laboratory.com"
+              placeholder="Email or username"
               required
             />
           </div>
@@ -206,7 +188,7 @@ export function LoginFormCard() {
             </label>
           </div>
 
-          <div className="space-y-2 pt-1">
+          <div className="pt-1">
             <button
               type="submit"
               className="lims-btn-primary h-11 w-full text-sm font-bold tracking-wide transition-all duration-150 hover:shadow-lg active:scale-[0.98] disabled:opacity-75"
@@ -220,14 +202,6 @@ export function LoginFormCard() {
               ) : (
                 'Sign In'
               )}
-            </button>
-
-            <button
-              type="button"
-              onClick={fillSuperAdminDemo}
-              className="inline-flex h-7 w-full items-center justify-center rounded-md border border-slate-200 bg-slate-50 px-2 text-[10px] font-semibold uppercase tracking-wide text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 active:scale-[0.98]"
-            >
-              Super Admin Demo
             </button>
           </div>
         </form>

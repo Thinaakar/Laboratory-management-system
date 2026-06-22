@@ -1,24 +1,20 @@
 import { listPackages } from '@/lib/firestore/app-data';
-import { ensureSeeded } from '@/lib/firestore/seed';
-import {
-  ensureDb,
-  handleRouteError,
-  jsonData,
-  requireAuth,
-  useRemoteDb,
-} from '@/lib/api/route-helpers';
-import { localApi } from '@/lib/api/local-handlers';
+import { createPackageDb } from '@/lib/firestore/catalog-writes';
+import { packageCreateSchema } from '@/lib/validation/catalog';
+import { catalogCreate, catalogError, catalogList } from '@/lib/api/catalog-route-helpers';
 
 export async function GET(request: Request) {
   try {
-    if (useRemoteDb()) {
-      await ensureDb();
-      requireAuth(request);
-      await ensureSeeded();
-      return jsonData(await listPackages());
-    }
-    return jsonData(await localApi.catalog.packages());
+    return await catalogList(request, listPackages);
   } catch (e) {
-    return handleRouteError(e);
+    return catalogError(e);
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    return await catalogCreate(request, packageCreateSchema, createPackageDb);
+  } catch (e) {
+    return catalogError(e);
   }
 }

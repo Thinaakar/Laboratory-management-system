@@ -10,6 +10,7 @@ import type {
   Sample,
   TestResult,
 } from '@/lib/types/lims';
+import type { DbRole, PublicUser } from '@/lib/data/db-types';
 import type { z } from 'zod';
 import type {
   appointmentCreateSchema,
@@ -20,6 +21,10 @@ import type {
   resultRejectSchema,
   sampleCreateSchema,
   sampleUpdateSchema,
+  userCreateSchema,
+  userUpdateSchema,
+  roleCreateSchema,
+  roleUpdateSchema,
 } from '@/lib/validation/entities';
 
 async function getData<T>(path: string): Promise<T> {
@@ -99,6 +104,24 @@ export const limsApi = {
     tests: () => getData<import('@/lib/types/lims').LabTest[]>('/api/tests'),
     packages: () => getData<import('@/lib/types/lims').HealthPackage[]>('/api/packages'),
     referrals: () => getData<import('@/lib/types/lims').DoctorReferral[]>('/api/referrals'),
+  },
+  users: {
+    list: () => getData<PublicUser[]>('/api/users'),
+    create: (body: z.infer<typeof userCreateSchema>) =>
+      sendData<PublicUser>('/api/users', 'POST', body),
+    update: (id: string, body: z.infer<typeof userUpdateSchema>) =>
+      sendData<PublicUser>(`/api/users/${id}`, 'PATCH', body),
+    remove: (id: string) => sendData<{ ok: true }>(`/api/users/${id}`, 'DELETE'),
+  },
+  roles: {
+    list: () => getData<DbRole[]>('/api/roles'),
+    create: (body: z.infer<typeof roleCreateSchema>) =>
+      sendData<DbRole>('/api/roles', 'POST', body),
+    update: (id: string, body: z.infer<typeof roleUpdateSchema>) =>
+      sendData<DbRole>(`/api/roles/${id}`, 'PATCH', body),
+    updatePermissions: (id: string, permissions: string[]) =>
+      sendData<DbRole>(`/api/roles/${id}`, 'PATCH', { permissions }),
+    remove: (id: string) => sendData<{ ok: true }>(`/api/roles/${id}`, 'DELETE'),
   },
 };
 

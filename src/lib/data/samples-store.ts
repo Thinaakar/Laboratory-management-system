@@ -1,6 +1,7 @@
 import type { Sample, SampleStatus } from "@/lib/types/lims";
 import { logAuditAction } from "@/lib/audit/log-action";
 import { getOrders } from "./orders-store";
+import { ensureResultsForOrderSample } from "./results-store";
 import { loadFromStorage, saveToStorage } from "./storage-utils";
 
 const STORAGE_KEY = "labcore-samples-v1";
@@ -68,6 +69,7 @@ export function addSample(input: {
 
   memorySamples = [...samples, created];
   saveSamples(memorySamples);
+  ensureResultsForOrderSample(order, created);
   logAuditAction({
     action: "CREATE",
     module: "samples",

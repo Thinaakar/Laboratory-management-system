@@ -33,7 +33,7 @@ export async function POST(request: Request) {
     if (useRemoteDb()) {
       await ensureDb();
       const session = requireAuth(request);
-      requirePermission(session, 'samples.create');
+      await requirePermission(session, 'samples.create');
       await ensureSeeded();
       return jsonData(await createSample(body, session), 201);
     }

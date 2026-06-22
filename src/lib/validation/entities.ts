@@ -144,3 +144,59 @@ export const resultRejectSchema = z.object({
 });
 
 export const analyticsPeriodSchema = z.enum(['overall', 'monthly', 'weekly', 'daily']);
+
+const userStatusEnum = z.enum(['Active', 'Inactive']);
+const roleStatusEnum = z.enum(['Active', 'Inactive']);
+
+import { USER_DEPARTMENT_OPTIONS } from '@/lib/data/user-constants';
+
+const userDepartmentEnum = z.enum(USER_DEPARTMENT_OPTIONS);
+
+const usernameSchema = z
+  .string()
+  .min(3, 'Username must be at least 3 characters')
+  .max(32)
+  .regex(/^[a-zA-Z0-9._-]+$/, 'Username may only contain letters, numbers, dots, hyphens, and underscores');
+
+export const userCreateSchema = z.object({
+  displayName: z.string().min(1, 'Full name is required'),
+  email: z.string().email('Valid email is required'),
+  mobile: z.string().min(10, 'Mobile number is required'),
+  username: usernameSchema,
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+  role: z.string().min(1, 'Role is required'),
+  branchId: z.string().optional(),
+  department: userDepartmentEnum.optional(),
+  status: userStatusEnum.default('Active'),
+});
+
+export const userUpdateSchema = z.object({
+  displayName: z.string().min(1, 'Full name is required'),
+  email: z.string().email('Valid email is required'),
+  mobile: z.string().min(10, 'Mobile number is required'),
+  username: usernameSchema,
+  password: z.string().min(6).optional(),
+  role: z.string().min(1, 'Role is required'),
+  branchId: z.string().optional(),
+  department: userDepartmentEnum.optional(),
+  status: userStatusEnum,
+});
+
+export const roleCreateSchema = z.object({
+  label: z.string().min(1),
+  description: z.string().min(1),
+  status: roleStatusEnum.default('Active'),
+  color: z.string().min(1),
+  permissions: z.array(z.string()).default(['dashboard.read']),
+});
+
+export const roleUpdateSchema = z.object({
+  label: z.string().min(1),
+  description: z.string().min(1),
+  status: roleStatusEnum,
+  color: z.string().min(1),
+});
+
+export const rolePermissionsSchema = z.object({
+  permissions: z.array(z.string()),
+});

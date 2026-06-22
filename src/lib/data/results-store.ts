@@ -1,5 +1,6 @@
-import type { TestResult } from '@/lib/types/lims';
+import type { LabOrder, Sample, TestResult } from '@/lib/types/lims';
 import { logAuditAction } from '@/lib/audit/log-action';
+import { getTests } from '@/lib/data/tests-store';
 import { loadFromStorage, saveToStorage } from './storage-utils';
 
 const STORAGE_KEY = 'labcore-results-v1';
@@ -25,6 +26,51 @@ export function getResults(): TestResult[] {
 
 export function getResultById(id: string): TestResult | undefined {
   return getResults().find((r) => r.id === id);
+}
+
+function getNextResultId(results: TestResult[] = getResults()): string {
+  const max = results.reduce((highest, result) => {
+    const match = result.id.match(/^RES-(\d+)$/i);
+    const num = match ? parseInt(match[1], 10) : NaN;
+    return Number.isNaN(num) ? highest : Math.max(highest, num);
+  }, 0);
+  return `RES-${String(max + 1).padStart(3, '0')}`;
+}
+
+export function ensureResultsForOrderSample(order: LabOrder, sample: Sample): void {
+  const results = getResults();
+  const tests = getTests();
+  const covered = new Set(
+    results.filter((r) => r.orderId === order.id).map((r) => r.testId),
+  );
+  const created: TestResult[] = [];
+
+  for (let i = 0; i < order.testIds.length; i++) {
+    const testId = order.testIds[i];
+    const testName = order.testNames[i] ?? testId;
+    if (covered.has(testId)) continue;
+
+    const catalogTest = tests.find((t) => t.id === testId);
+    created.push({
+      id: getNextResultId([...results, ...created]),
+      sampleId: sample.id,
+      orderId: order.id,
+      testId,
+      testName,
+      value: '—',
+      unit: catalogTest?.unit,
+      referenceRange: catalogTest?.referenceRange,
+      queueStatus: 'Pending',
+      approvalStatus: 'Pending',
+      enteredAt: new Date().toISOString(),
+    });
+    covered.add(testId);
+  }
+
+  if (created.length) {
+    memoryResults = [...results, ...created];
+    saveResults(memoryResults);
+  }
 }
 
 export function enterResultLocal(input: {

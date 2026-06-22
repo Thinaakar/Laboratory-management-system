@@ -1,25 +1,41 @@
 'use client';
 
+import { useCallback, useEffect, useState } from 'react';
 import { SettingsShell } from '@/components/lims/settings/settings-shell';
 import { SupplierFormModal } from '@/components/lims/operations/supplier-form-modal';
-import { addSupplier, getSuppliers } from '@/lib/data/suppliers-store';
+import { apiJson } from '@/lib/http/client';
 import type { Supplier } from '@/lib/types/lims';
 import { formatCurrency } from '@/lib/utils';
 import { Plus } from 'lucide-react';
-import { useEffect, useState } from 'react';
 
 export default function SettingsSuppliersPage() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [showModal, setShowModal] = useState(false);
+  const [error, setError] = useState('');
 
-  const refresh = () => setSuppliers(getSuppliers());
+  const refresh = useCallback(async () => {
+    setError('');
+    try {
+      const res = await apiJson<{ data: Supplier[] }>('/api/suppliers');
+      setSuppliers(res.data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not load suppliers.');
+      setSuppliers([]);
+    }
+  }, []);
 
   useEffect(() => {
-    refresh();
-  }, []);
+    void refresh();
+  }, [refresh]);
 
   return (
     <SettingsShell description="Suppliers — vendors for reagents, kits, and consumables">
+      {error && (
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
       <div className="mb-4 flex justify-end">
         <button type="button" onClick={() => setShowModal(true)} className="lims-btn-primary">
           <Plus className="h-4 w-4" />
@@ -55,10 +71,10 @@ export default function SettingsSuppliersPage() {
       {showModal && (
         <SupplierFormModal
           onClose={() => setShowModal(false)}
-          onSave={(data) => {
-            addSupplier(data);
+          onSave={async (data) => {
+            await apiJson('/api/suppliers', { method: 'POST', body: JSON.stringify(data) });
             setShowModal(false);
-            refresh();
+            await refresh();
           }}
         />
       )}

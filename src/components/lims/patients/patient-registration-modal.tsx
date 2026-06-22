@@ -43,6 +43,18 @@ export function PatientRegistrationModal({
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const api = await getLimsData();
+      const list = await api.catalog.referrals();
+      if (!cancelled) setReferrals(list);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
     setMounted(true);
     if (patient) {
       setPatientId(patient.id);

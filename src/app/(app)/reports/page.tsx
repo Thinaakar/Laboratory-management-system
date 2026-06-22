@@ -1,25 +1,69 @@
 'use client';
 
-import { Download, Eye } from 'lucide-react';
-import { Suspense, useMemo, useState } from 'react';
+import { Download, Eye, FileText } from 'lucide-react';
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { PageHeader } from '@/components/lims/page-header';
 import { FlashBanner } from '@/components/lims/flash-banner';
 import { HydrationSafeInput } from '@/components/lims/client-only';
 import { ViewReportModal } from '@/components/lims/reports/view-report-modal';
 import { StatusBadge, statusVariant } from '@/components/lims/status-badge';
+import { getLimsData } from '@/lib/api/use-lims-data';
+import { apiJson } from '@/lib/http/client';
 import {
   allReportsDetailCsvRows,
-  buildPatientReports,
   reportDetailCsvRows,
   type PatientReport,
 } from '@/lib/data/reports';
 import { downloadCsv } from '@/lib/utils/csv';
+import { downloadReportPdf } from '@/lib/utils/report-pdf';
 import { formatDateTime } from '@/lib/utils';
+
+type ReportLabSettings = {
+  laboratoryName?: string;
+  enableQrVerification?: boolean;
+  includeDigitalSignature?: boolean;
+};
 
 function ReportsContent() {
   const [search, setSearch] = useState('');
   const [viewReport, setViewReport] = useState<PatientReport | null>(null);
-  const reports = useMemo(() => buildPatientReports(), []);
+  const [reports, setReports] = useState<PatientReport[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [labSettings, setLabSettings] = useState<ReportLabSettings | null>(null);
+  const [pdfLoadingId, setPdfLoadingId] = useState<string | null>(null);
+
+  const refresh = useCallback(async () => {
+    const api = await getLimsData();
+    setReports(await api.reports.list());
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    void refresh();
+    void apiJson<{ data: ReportLabSettings }>('/api/settings/general')
+      .then((res) => setLabSettings(res.data))
+      .catch(() => setLabSettings(null));
+  }, [refresh]);
+
+  const pdfOptions = useMemo(
+    () => ({
+      laboratoryName: labSettings?.laboratoryName,
+      includeQr: labSettings?.enableQrVerification ?? true,
+      includeSignature: labSettings?.includeDigitalSignature ?? true,
+    }),
+    [labSettings],
+  );
+
+  const handleDownloadPdf = async (report: PatientReport) => {
+    setPdfLoadingId(report.reportId);
+    try {
+      await downloadReportPdf(report, pdfOptions);
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : 'Could not generate PDF.');
+    } finally {
+      setPdfLoadingId(null);
+    }
+  };
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -79,7 +123,13 @@ function ReportsContent() {
               </tr>
             </thead>
             <tbody>
-              {filtered.length === 0 ? (
+              {loading ? (
+                <tr>
+                  <td colSpan={9} className="py-10 text-center text-sm text-muted">
+                    Loading reports…
+                  </td>
+                </tr>
+              ) : filtered.length === 0 ? (
                 <tr>
                   <td colSpan={9} className="py-10 text-center text-sm text-muted">
                     {reports.length === 0
@@ -118,11 +168,21 @@ function ReportsContent() {
                         </button>
                         <button
                           type="button"
+                          onClick={() => void handleDownloadPdf(report)}
+                          disabled={pdfLoadingId === report.reportId}
+                          className="rounded-md p-2 text-muted transition-colors hover:bg-muted-bg hover:text-primary disabled:opacity-50"
+                          aria-label={`Download PDF for report ${report.reportId}`}
+                          title="Download PDF"
+                        >
+                          <FileText className="h-4 w-4" />
+                        </button>
+                        <button
+                          type="button"
                           onClick={() =>
                             downloadCsv(`${report.reportId}-report`, reportDetailCsvRows(report))
                           }
                           className="rounded-md p-2 text-muted transition-colors hover:bg-muted-bg hover:text-primary"
-                          aria-label={`Export report ${report.reportId}`}
+                          aria-label={`Export CSV for report ${report.reportId}`}
                           title="Export CSV"
                         >
                           <Download className="h-4 w-4" />
@@ -138,7 +198,11 @@ function ReportsContent() {
       </div>
 
       {viewReport && (
-        <ViewReportModal report={viewReport} onClose={() => setViewReport(null)} />
+        <ViewReportModal
+          report={viewReport}
+          pdfOptions={pdfOptions}
+          onClose={() => setViewReport(null)}
+        />
       )}
     </>
   );

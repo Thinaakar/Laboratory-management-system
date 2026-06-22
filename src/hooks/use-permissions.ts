@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { getSession } from '@/lib/auth/demo-users';
 import { hasPermission } from '@/lib/auth/permissions';
-import { getRolePermissions } from '@/lib/data/roles-store';
+import { apiJson } from '@/lib/http/client';
 
 export function usePermissions() {
   const [permissionIds, setPermissionIds] = useState<string[] | null>(null);
@@ -17,7 +17,16 @@ export function usePermissions() {
       return;
     }
     setRole(session.role);
-    setPermissionIds(getRolePermissions(session.role));
+
+    void apiJson<{ data: { role: string; permissions?: string[] } | null }>('/api/auth/session')
+      .then((res) => {
+        if (res.data?.permissions) {
+          setPermissionIds(res.data.permissions);
+        } else {
+          setPermissionIds([]);
+        }
+      })
+      .catch(() => setPermissionIds([]));
   }, []);
 
   const can = (permissionId: string): boolean => {

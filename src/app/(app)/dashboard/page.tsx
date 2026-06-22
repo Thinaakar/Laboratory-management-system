@@ -1,15 +1,19 @@
 "use client";
 
 import Link from "next/link";
+import { useCallback, useEffect, useState } from "react";
 import { AnalyticsPieChart } from "@/components/lims/analytics/analytics-pie-chart";
 import { PageHeader } from "@/components/lims/page-header";
 import { DashboardOverview } from "@/components/lims/dashboard-overview";
-import { getAnalyticsSnapshot } from "@/lib/data/analytics";
+import { getLimsData } from "@/lib/api/use-lims-data";
 import {
-  getDashboardKpis,
-  getPendingTestRows,
-  getSampleTrend,
+  buildPendingTestRows,
+  buildSampleTrend,
+  type PendingTestRow,
+  type SampleTrendDay,
 } from "@/lib/data/store";
+import type { ChartSlice } from "@/lib/data/analytics";
+import type { DashboardKpis } from "@/lib/types/lims";
 import { formatCurrency } from "@/lib/utils";
 
 const QUICK_ACTIONS = [
@@ -21,11 +25,41 @@ const QUICK_ACTIONS = [
   { label: "Approve Reports", href: "/reports/approval" },
 ];
 
+const EMPTY_KPIS: DashboardKpis = {
+  totalPatients: 0,
+  todayRegistrations: 0,
+  todaySamples: 0,
+  pendingTests: 0,
+  completedReports: 0,
+  revenueToday: 0,
+  monthlyRevenue: 0,
+  outstandingPayments: 0,
+};
+
 export default function DashboardPage() {
-  const kpis = getDashboardKpis();
-  const pendingTests = getPendingTestRows();
-  const sampleTrend = getSampleTrend();
-  const samplePipeline = getAnalyticsSnapshot().sampleStatus;
+  const [kpis, setKpis] = useState<DashboardKpis>(EMPTY_KPIS);
+  const [pendingTests, setPendingTests] = useState<PendingTestRow[]>([]);
+  const [sampleTrend, setSampleTrend] = useState<SampleTrendDay[]>([]);
+  const [samplePipeline, setSamplePipeline] = useState<ChartSlice[]>([]);
+
+  const refresh = useCallback(async () => {
+    const api = await getLimsData();
+    const [kpisData, results, orders, samples, analytics] = await Promise.all([
+      api.dashboard.kpis(),
+      api.results.list(),
+      api.orders.list(),
+      api.samples.list(),
+      api.analytics.snapshot("overall"),
+    ]);
+    setKpis(kpisData);
+    setPendingTests(buildPendingTestRows(results, orders));
+    setSampleTrend(buildSampleTrend(samples));
+    setSamplePipeline(analytics.sampleStatus);
+  }, []);
+
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
 
   return (
     <div>

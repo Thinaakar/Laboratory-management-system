@@ -3,11 +3,10 @@
 import { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 import { ModalPortal } from '@/components/lims/modal-portal';
-import { getOrders } from '@/lib/data/store';
-import { addSample, getNextBarcode } from '@/lib/data/samples-store';
+import { getLimsData } from '@/lib/api/use-lims-data';
 import { getActiveSampleTypes } from '@/lib/data/sample-types-store';
 
-import type { Sample } from '@/lib/types/lims';
+import type { LabOrder, Sample } from '@/lib/types/lims';
 
 interface RegisterSampleModalProps {
   onClose: () => void;
@@ -21,7 +20,7 @@ function toDatetimeLocalValue(date: Date = new Date()): string {
 
 export function RegisterSampleModal({ onClose, onSaved }: RegisterSampleModalProps) {
   const [ready, setReady] = useState(false);
-  const [orders, setOrders] = useState<ReturnType<typeof getOrders>>([]);
+  const [orders, setOrders] = useState<LabOrder[]>([]);
   const [sampleTypes, setSampleTypes] = useState<ReturnType<typeof getActiveSampleTypes>>([]);
   const [orderId, setOrderId] = useState('');
   const [sampleType, setSampleType] = useState('');
@@ -29,22 +28,34 @@ export function RegisterSampleModal({ onClose, onSaved }: RegisterSampleModalPro
   const [barcode, setBarcode] = useState('');
 
   useEffect(() => {
-    const list = getOrders();
-    const types = getActiveSampleTypes();
-    setOrders(list);
-    setSampleTypes(types);
-    setOrderId(list[0]?.id ?? '');
-    setSampleType(types[0]?.name ?? '');
-    setCollectedAt(toDatetimeLocalValue());
-    setBarcode(getNextBarcode());
-    setReady(true);
+    let cancelled = false;
+    (async () => {
+      const api = await getLimsData();
+      const [list, barcode] = await Promise.all([
+        api.orders.list(),
+        api.samples.nextBarcode(),
+      ]);
+      const types = getActiveSampleTypes();
+      if (cancelled) return;
+      setOrders(list);
+      setSampleTypes(types);
+      setOrderId(list[0]?.id ?? '');
+      setSampleType(types[0]?.name ?? '');
+      setCollectedAt(toDatetimeLocalValue());
+      setBarcode(barcode.barcode);
+      setReady(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!orderId || !collectedAt) return;
     try {
-      const saved = addSample({ orderId, sampleType, barcode, collectedAt });
+      const api = await getLimsData();
+      const saved = await api.samples.create({ orderId, sampleType, barcode, collectedAt });
       onSaved(saved);
     } catch {
       window.alert('Could not register sample.');

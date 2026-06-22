@@ -1,3 +1,14 @@
+import type {
+  Appointment,
+  InventoryItem,
+  Invoice,
+  LabOrder,
+  LabTest,
+  LimsUser,
+  Patient,
+  Sample,
+  TestResult,
+} from "@/lib/types/lims";
 import {
   getAppointments,
   getInventory,
@@ -213,19 +224,34 @@ function periodTrendSubtitle(period: AnalyticsPeriod): string {
   }
 }
 
-export function getAnalyticsSnapshot(period: AnalyticsPeriod = "overall"): AnalyticsSnapshot {
+export interface AnalyticsDataSource {
+  patients: Patient[];
+  samples: Sample[];
+  orders: LabOrder[];
+  invoices: Invoice[];
+  results: TestResult[];
+  appointments: Appointment[];
+  tests: LabTest[];
+  users: LimsUser[];
+  inventory: InventoryItem[];
+}
+
+export function buildAnalyticsSnapshot(
+  data: AnalyticsDataSource,
+  period: AnalyticsPeriod = "overall",
+): AnalyticsSnapshot {
   const now = new Date();
-  const patients = getPatients().filter((p) => isInPeriod(p.createdAt, period, now));
-  const samples = getSamples().filter((s) => isInPeriod(s.createdAt, period, now));
-  const orders = getOrders().filter((o) => isInPeriod(o.createdAt, period, now));
-  const invoices = getInvoices().filter((i) => isInPeriod(i.createdAt, period, now));
-  const results = getResults().filter((r) =>
+  const patients = data.patients.filter((p) => isInPeriod(p.createdAt, period, now));
+  const samples = data.samples.filter((s) => isInPeriod(s.createdAt, period, now));
+  const orders = data.orders.filter((o) => isInPeriod(o.createdAt, period, now));
+  const invoices = data.invoices.filter((i) => isInPeriod(i.createdAt, period, now));
+  const results = data.results.filter((r) =>
     isInPeriod(r.enteredAt ?? r.approvedAt ?? "", period, now),
   );
-  const appointments = getAppointments().filter((a) => isInPeriod(a.scheduledAt, period, now));
-  const tests = getTests();
-  const users = getUsers();
-  const inventory = getInventory();
+  const appointments = data.appointments.filter((a) => isInPeriod(a.scheduledAt, period, now));
+  const tests = data.tests;
+  const users = data.users;
+  const inventory = data.inventory;
 
   const buckets = trendBuckets(period, now);
 
@@ -321,6 +347,23 @@ export function getAnalyticsSnapshot(period: AnalyticsPeriod = "overall"): Analy
     testStatus,
     departmentMix: departmentMix.filter((d) => d.value > 0),
   };
+}
+
+export function getAnalyticsSnapshot(period: AnalyticsPeriod = "overall"): AnalyticsSnapshot {
+  return buildAnalyticsSnapshot(
+    {
+      patients: getPatients(),
+      samples: getSamples(),
+      orders: getOrders(),
+      invoices: getInvoices(),
+      results: getResults(),
+      appointments: getAppointments(),
+      tests: getTests(),
+      users: getUsers(),
+      inventory: getInventory(),
+    },
+    period,
+  );
 }
 
 export function getAnalyticsTrendSubtitle(period: AnalyticsPeriod): string {

@@ -5,18 +5,30 @@ import { DEMO_USERS, DEFAULT_BRANCH } from '@/lib/data/db-types';
 import type { DbUser } from '@/lib/data/db-types';
 import { isCollectionEmpty } from '@/lib/firestore/app-data';
 import { seedDocument } from '@/lib/firestore/app-writes';
-import {
-  seedDepartments,
-  seedInvoices,
-  seedOrders,
-  seedPatients,
-  seedResults,
-  seedSamples,
-  seedTests,
-} from '@/lib/data/store';
-import { seedAppointments } from '@/lib/data/appointments-store';
+import { seedDepartments } from '@/lib/data/departments-store';
 import { seedPackages } from '@/lib/data/packages-store';
-import { seedReferrals } from '@/lib/data/referrals-store';
+import { seedSampleTypes } from '@/lib/data/sample-types-store';
+import { seedTests } from '@/lib/data/tests-store';
+
+/** Tables that hold real operational data — never auto-seeded with demo rows. */
+export const TRANSACTIONAL_TABLES = [
+  'patients',
+  'orders',
+  'invoices',
+  'samples',
+  'results',
+  'appointments',
+] as const;
+
+/** Master catalog + auth — seeded once on empty database. */
+export const MASTER_TABLES = [
+  'users',
+  'branches',
+  'departments',
+  'tests',
+  'packages',
+  'sample_types',
+] as const;
 
 async function seedUsers(): Promise<void> {
   for (const demo of DEMO_USERS) {
@@ -34,9 +46,8 @@ async function seedUsers(): Promise<void> {
   }
 }
 
-async function runSeed(): Promise<string> {
+async function runMasterSeed(): Promise<string> {
   await seedDocument('branches', DEFAULT_BRANCH.id, DEFAULT_BRANCH);
-
   await seedUsers();
 
   for (const dept of seedDepartments) {
@@ -45,47 +56,47 @@ async function runSeed(): Promise<string> {
   for (const test of seedTests) {
     await seedDocument('tests', test.id, test as unknown as Record<string, unknown>);
   }
-  for (const patient of seedPatients) {
-    await seedDocument('patients', patient.id, patient as unknown as Record<string, unknown>);
-  }
-  for (const order of seedOrders) {
-    await seedDocument('orders', order.id, order as unknown as Record<string, unknown>);
-  }
-  for (const invoice of seedInvoices) {
-    await seedDocument('invoices', invoice.id, invoice as unknown as Record<string, unknown>);
-  }
-  for (const sample of seedSamples) {
-    await seedDocument('samples', sample.id, sample as unknown as Record<string, unknown>);
-  }
-  for (const result of seedResults) {
-    await seedDocument('results', result.id, result as unknown as Record<string, unknown>);
-  }
   for (const pkg of seedPackages) {
     await seedDocument('packages', pkg.id, pkg as unknown as Record<string, unknown>);
   }
-  for (const ref of seedReferrals) {
-    await seedDocument('referrals', ref.id, ref as unknown as Record<string, unknown>);
-  }
-  for (const apt of seedAppointments) {
-    await seedDocument('appointments', apt.id, apt as unknown as Record<string, unknown>);
+  for (const sampleType of seedSampleTypes) {
+    await seedDocument('sample_types', sampleType.id, sampleType as unknown as Record<string, unknown>);
   }
 
-  return `Seeded ${DEMO_USERS.length} users, ${seedPatients.length} patients, ${seedOrders.length} orders, and lab records.`;
+  return `Seeded master data: ${DEMO_USERS.length} users, ${seedTests.length} tests, ${seedPackages.length} packages.`;
 }
 
 export async function ensureSeeded(): Promise<{ seeded: boolean; message: string }> {
   const usersEmpty = await isCollectionEmpty('users');
   if (!usersEmpty) {
-    return { seeded: false, message: 'Database already has users.' };
+    return { seeded: false, message: 'Database already initialized.' };
   }
-  const message = await runSeed();
+  const message = await runMasterSeed();
   return { seeded: true, message };
+}
+
+export async function clearTransactionalFirestore(): Promise<{ deleted: Record<string, number> }> {
+  const db = getAdminFirestore();
+  const deleted: Record<string, number> = {};
+
+  for (const table of TRANSACTIONAL_TABLES) {
+    const snap = await appCollection(db, table).get();
+    if (!snap.empty) {
+      const batch = db.batch();
+      snap.docs.forEach((doc) => batch.delete(doc.ref));
+      await batch.commit();
+    }
+    deleted[table] = snap.size;
+  }
+
+  return { deleted };
 }
 
 export async function forceReseed(): Promise<{ seeded: boolean; message: string }> {
   const db = getAdminFirestore();
-  const tables = ['users', 'patients', 'orders', 'invoices', 'samples', 'results', 'tests', 'departments', 'branches', 'packages', 'referrals', 'appointments'];
-  for (const table of tables) {
+  const allTables = [...TRANSACTIONAL_TABLES, ...MASTER_TABLES];
+
+  for (const table of allTables) {
     const snap = await appCollection(db, table).get();
     if (!snap.empty) {
       const batch = db.batch();
@@ -93,6 +104,7 @@ export async function forceReseed(): Promise<{ seeded: boolean; message: string 
       await batch.commit();
     }
   }
-  const message = await runSeed();
-  return { seeded: true, message };
+
+  const message = await runMasterSeed();
+  return { seeded: true, message: `Cleared all tables. ${message}` };
 }

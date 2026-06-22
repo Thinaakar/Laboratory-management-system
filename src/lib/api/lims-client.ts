@@ -3,6 +3,7 @@ import type { AnalyticsPeriod, AnalyticsSnapshot } from '@/lib/data/analytics';
 import type { PatientReport } from '@/lib/data/reports';
 import type {
   Appointment,
+  DashboardKpis,
   Invoice,
   LabOrder,
   Patient,
@@ -90,6 +91,9 @@ export const limsApi = {
   analytics: {
     snapshot: (period: AnalyticsPeriod = 'overall') =>
       getData<AnalyticsSnapshot>(`/api/analytics?period=${period}`),
+  },
+  dashboard: {
+    kpis: () => getData<DashboardKpis>('/api/dashboard/kpis'),
   },
   catalog: {
     tests: () => getData<import('@/lib/types/lims').LabTest[]>('/api/tests'),

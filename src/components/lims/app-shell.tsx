@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getSession } from "@/lib/auth/demo-users";
+import { initLimsDataMode } from "@/lib/api/use-lims-data";
 import { LimsSidebar } from "./sidebar";
 
 export function LimsAppShell({ children }: { children: React.ReactNode }) {
@@ -10,6 +11,7 @@ export function LimsAppShell({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!getSession()) router.replace("/login");
+    else void initLimsDataMode();
   }, [router]);
 
   return (

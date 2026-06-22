@@ -1,23 +1,35 @@
-import type { DashboardKpis } from '@/lib/types/lims';
-import { seedPatients } from './patients-store';
-import { seedOrders, seedInvoices } from './orders-store';
-import { getSamples, seedSamples } from './samples-store';
-import { getResults, seedResults } from './results-store';
+import type { DashboardKpis, LabOrder, Sample, TestResult } from '@/lib/types/lims';
+import { getPatients } from './patients-store';
+import { getOrders, getInvoices } from './orders-store';
+import { getSamples } from './samples-store';
+import { getResults } from './results-store';
 
 const today = new Date().toISOString().slice(0, 10);
 
 export { seedResults } from './results-store';
 
 export function getDashboardKpis(): DashboardKpis {
+  const patients = getPatients();
+  const samples = getSamples();
+  const results = getResults();
+  const invoices = getInvoices();
+  const monthStart = today.slice(0, 7);
+
   return {
-    totalPatients: seedPatients.length,
-    todayRegistrations: seedPatients.filter((p) => p.createdAt.startsWith(today)).length,
-    todaySamples: getSamples().filter((s) => s.createdAt.startsWith(today)).length,
-    pendingTests: getResults().filter((r) => r.approvalStatus === 'Pending').length,
-    completedReports: getResults().filter((r) => r.approvalStatus === 'Approved').length,
-    revenueToday: seedInvoices.filter((i) => i.createdAt.startsWith(today)).reduce((s, i) => s + i.paidAmount, 0),
-    monthlyRevenue: 284500,
-    outstandingPayments: seedInvoices.filter((i) => i.status !== 'Paid').reduce((s, i) => s + (i.amount - i.paidAmount), 0),
+    totalPatients: patients.length,
+    todayRegistrations: patients.filter((p) => p.createdAt.startsWith(today)).length,
+    todaySamples: samples.filter((s) => s.createdAt.startsWith(today)).length,
+    pendingTests: results.filter((r) => r.approvalStatus === 'Pending').length,
+    completedReports: results.filter((r) => r.approvalStatus === 'Approved').length,
+    revenueToday: invoices
+      .filter((i) => i.createdAt.startsWith(today))
+      .reduce((s, i) => s + i.paidAmount, 0),
+    monthlyRevenue: invoices
+      .filter((i) => i.createdAt.startsWith(monthStart))
+      .reduce((s, i) => s + i.paidAmount, 0),
+    outstandingPayments: invoices
+      .filter((i) => i.status !== 'Paid')
+      .reduce((s, i) => s + (i.amount - i.paidAmount), 0),
   };
 }
 
@@ -27,9 +39,11 @@ export interface PendingTestRow {
   status: string;
 }
 
-/** Tests awaiting approval or still in the lab queue */
-export function getPendingTestRows(): PendingTestRow[] {
-  const pendingResults = getResults()
+export function buildPendingTestRows(
+  results: TestResult[],
+  orders: LabOrder[],
+): PendingTestRow[] {
+  const pendingResults = results
     .filter((r) => r.approvalStatus === 'Pending')
     .map((r) => ({
       id: r.id,
@@ -37,8 +51,8 @@ export function getPendingTestRows(): PendingTestRow[] {
       status: r.queueStatus === 'Completed' ? 'Pending Approval' : r.queueStatus,
     }));
 
-  const coveredTestKeys = new Set(getResults().map((r) => `${r.orderId}:${r.testId}`));
-  const queuedFromOrders = seedOrders.flatMap((order) =>
+  const coveredTestKeys = new Set(results.map((r) => `${r.orderId}:${r.testId}`));
+  const queuedFromOrders = orders.flatMap((order) =>
     order.testIds
       .map((testId, i) => ({ testId, testName: order.testNames[i] ?? testId }))
       .filter(({ testId }) => {
@@ -55,6 +69,11 @@ export function getPendingTestRows(): PendingTestRow[] {
   return [...pendingResults, ...queuedFromOrders].slice(0, 9);
 }
 
+/** Tests awaiting approval or still in the lab queue */
+export function getPendingTestRows(): PendingTestRow[] {
+  return buildPendingTestRows(getResults(), getOrders());
+}
+
 export interface SampleTrendDay {
   label: string;
   count: number;
@@ -63,14 +82,13 @@ export interface SampleTrendDay {
 
 const WEEKDAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const;
 
-/** Last 7 days sample counts with labels for the dashboard bar chart */
-export function getSampleTrend(): SampleTrendDay[] {
+export function buildSampleTrend(samples: Sample[]): SampleTrendDay[] {
   const days: SampleTrendDay[] = [];
   for (let i = 6; i >= 0; i--) {
     const d = new Date();
     d.setDate(d.getDate() - i);
     const key = d.toISOString().slice(0, 10);
-    const count = getSamples().filter((s) => s.createdAt.startsWith(key)).length;
+    const count = samples.filter((s) => s.createdAt.startsWith(key)).length;
     const label = WEEKDAY_LABELS[d.getDay()];
     days.push({ label, count, heightPct: 0 });
   }
@@ -79,6 +97,11 @@ export function getSampleTrend(): SampleTrendDay[] {
     ...day,
     heightPct: day.count === 0 ? 10 : Math.max(22, Math.round((day.count / max) * 100)),
   }));
+}
+
+/** Last 7 days sample counts with labels for the dashboard bar chart */
+export function getSampleTrend(): SampleTrendDay[] {
+  return buildSampleTrend(getSamples());
 }
 
 /** @deprecated Use getSampleTrend() */

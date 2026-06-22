@@ -1,85 +1,21 @@
 import type { Sample, SampleStatus } from "@/lib/types/lims";
 import { logAuditAction } from "@/lib/audit/log-action";
 import { getOrders } from "./orders-store";
-import { seedPatients } from "./patients-store";
+import { loadFromStorage, saveToStorage } from "./storage-utils";
 
 const STORAGE_KEY = "labcore-samples-v1";
 
-function dateOffset(daysAgo: number, hour = 10, minute = 0): string {
-  const d = new Date();
-  d.setDate(d.getDate() - daysAgo);
-  const date = d.toISOString().slice(0, 10);
-  return `${date}T${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}:00`;
-}
-
-const TREND_DAY_COUNTS = [5, 7, 6, 10, 8, 11, 9];
-
-function buildSeedSamples(): Sample[] {
-  const statuses: Sample["status"][] = ["Registered", "Collected", "Received", "Processing", "Completed"];
-  const patients = seedPatients;
-  let seq = 1;
-  const samples: Sample[] = [];
-
-  TREND_DAY_COUNTS.forEach((count, dayIndex) => {
-    const daysAgo = 6 - dayIndex;
-    for (let i = 0; i < count; i++) {
-      const patient = patients[(seq - 1) % patients.length];
-      const status =
-        daysAgo === 0
-          ? statuses[i % 4]
-          : daysAgo <= 1
-            ? "Processing"
-            : "Completed";
-      const createdAt = dateOffset(daysAgo, 8 + (i % 9), (i * 7) % 60);
-      const id = `SMP-2026-${String(seq).padStart(4, "0")}`;
-      samples.push({
-        id,
-        orderId: seq <= 2 ? `ORD-2026-000${seq}` : `ORD-2026-000${((seq - 1) % 5) + 1}`,
-        patientId: patient.id,
-        patientName: patient.name,
-        barcode: `BC2026${String(seq).padStart(4, "0")}`,
-        sampleType: i % 5 === 0 ? "Urine" : "Blood",
-        status,
-        collectedAt:
-          status !== "Registered"
-            ? createdAt.replace(/T(\d+)/, (_, h) => `T${String(Number(h) + 1).padStart(2, "0")}`)
-            : undefined,
-        receivedAt: ["Received", "Processing", "Completed"].includes(status)
-          ? dateOffset(daysAgo, 9 + (i % 8), 15)
-          : undefined,
-        createdAt,
-      });
-      seq += 1;
-    }
-  });
-
-  return samples;
-}
-
-export const seedSamples: Sample[] = buildSeedSamples();
-
-function cloneSeed(): Sample[] {
-  return seedSamples.map((s) => ({ ...s }));
-}
+export const seedSamples: Sample[] = [];
 
 function loadSamples(): Sample[] {
-  if (typeof window === "undefined") return cloneSeed();
-  try {
-    const raw = sessionStorage.getItem(STORAGE_KEY);
-    if (!raw) return cloneSeed();
-    const parsed = JSON.parse(raw) as Sample[];
-    return parsed.length ? parsed : cloneSeed();
-  } catch {
-    return cloneSeed();
-  }
+  return loadFromStorage<Sample>(STORAGE_KEY, []);
 }
 
 function saveSamples(samples: Sample[]) {
-  if (typeof window === "undefined") return;
-  sessionStorage.setItem(STORAGE_KEY, JSON.stringify(samples));
+  saveToStorage(STORAGE_KEY, samples);
 }
 
-let memorySamples = cloneSeed();
+let memorySamples: Sample[] = [];
 
 export function getSamples(): Sample[] {
   if (typeof window !== "undefined") {

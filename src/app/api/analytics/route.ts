@@ -1,5 +1,6 @@
 import { analyticsPeriodSchema } from '@/lib/validation/entities';
-import { analyticsSnapshotCsvRows, getAnalyticsSnapshot } from '@/lib/data/analytics';
+import { analyticsSnapshotCsvRows } from '@/lib/data/analytics';
+import { getAnalyticsFromDb } from '@/lib/firestore/app-data';
 import { ensureSeeded } from '@/lib/firestore/seed';
 import {
   ensureDb,
@@ -25,7 +26,7 @@ export async function GET(request: Request) {
     }
 
     const snapshot = useRemoteDb()
-      ? getAnalyticsSnapshot(period)
+      ? await getAnalyticsFromDb(period)
       : await localApi.analytics.snapshot(period);
 
     if (format === 'csv') {

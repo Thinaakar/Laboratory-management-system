@@ -13,7 +13,7 @@ import { SampleDetailModal } from '@/components/lims/samples/sample-detail-modal
 import { StatusBadge, statusVariant } from '@/components/lims/status-badge';
 import { TableRowActions } from '@/components/lims/table-row-actions';
 import { defaultStringSort, useDataTable } from '@/hooks/use-data-table';
-import { deleteSample, getSamples } from '@/lib/data/samples-store';
+import { getLimsData } from '@/lib/api/use-lims-data';
 import type { Sample } from '@/lib/types/lims';
 import { formatDateTime } from '@/lib/utils';
 
@@ -30,7 +30,10 @@ function SamplesContent() {
   const [editSample, setEditSample] = useState<Sample | null>(null);
   const [successMessage, setSuccessMessage] = useState('');
 
-  const refresh = useCallback(() => setSamples(getSamples()), []);
+  const refresh = useCallback(async () => {
+    const api = await getLimsData();
+    setSamples(await api.samples.list());
+  }, []);
 
   useEffect(() => {
     refresh();
@@ -44,11 +47,12 @@ function SamplesContent() {
   }, [searchParams]);
 
   const handleDelete = useCallback(
-    (s: Sample) => {
+    async (s: Sample) => {
       if (!window.confirm(`Delete sample ${s.barcode} (${s.id})? This cannot be undone.`)) return;
       try {
-        deleteSample(s.id);
-        refresh();
+        const api = await getLimsData();
+        await api.samples.remove(s.id);
+        await refresh();
         setSuccessMessage(`Sample ${s.id} deleted.`);
       } catch {
         window.alert('Could not delete sample.');

@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start -p 3000",
     "lint": "next lint",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "clear-transactional": "node scripts/clear-transactional-data.mjs"
   },
   "dependencies": {
     "clsx": "^2.1.1",

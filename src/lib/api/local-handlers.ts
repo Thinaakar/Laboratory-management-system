@@ -33,6 +33,11 @@ import {
 import { getPackages, getReferrals, getTests } from '@/lib/data/store';
 import { buildPatientReports } from '@/lib/data/reports';
 import { getAnalyticsSnapshot } from '@/lib/data/analytics';
+import {
+  buildPendingTestRows,
+  buildSampleTrend,
+  getDashboardKpis,
+} from '@/lib/data/store';
 import type { z } from 'zod';
 import type {
   appointmentCreateSchema,
@@ -141,6 +146,14 @@ export const localApi = {
   analytics: {
     snapshot: (period: AnalyticsPeriod = 'overall') =>
       Promise.resolve(getAnalyticsSnapshot(period)),
+  },
+  dashboard: {
+    kpis: () => Promise.resolve(getDashboardKpis()),
+    pendingTests: async () => {
+      const [results, orders] = await Promise.all([getResults(), getOrders()]);
+      return buildPendingTestRows(results, orders);
+    },
+    sampleTrend: async () => buildSampleTrend(getSamples()),
   },
   catalog: {
     tests: () => Promise.resolve(getTests()),

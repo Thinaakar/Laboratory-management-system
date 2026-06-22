@@ -1,18 +1,27 @@
 'use client';
 
 import Link from 'next/link';
-import { Suspense } from 'react';
+import { Suspense, useCallback, useEffect, useState } from 'react';
 import { PageHeader } from '@/components/lims/page-header';
 import { FlashBanner } from '@/components/lims/flash-banner';
 import { StatusBadge, statusVariant } from '@/components/lims/status-badge';
-import { useClientData } from '@/hooks/use-hydrated';
-import { getOrders } from '@/lib/data/store';
+import { getLimsData } from '@/lib/api/use-lims-data';
 import type { LabOrder } from '@/lib/types/lims';
 import { formatCurrency, formatDateTime } from '@/lib/utils';
 
 function OrdersContent() {
-  const { data: orders, ready } = useClientData(() => getOrders());
-  const rows: LabOrder[] = orders ?? [];
+  const [orders, setOrders] = useState<LabOrder[]>([]);
+  const [ready, setReady] = useState(false);
+
+  const refresh = useCallback(async () => {
+    const api = await getLimsData();
+    setOrders(await api.orders.list());
+    setReady(true);
+  }, []);
+
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
 
   return (
     <>
@@ -43,24 +52,27 @@ function OrdersContent() {
           <tbody>
             {!ready ? (
               <tr>
-                <td colSpan={6} className="py-10 text-center text-sm text-muted">
+                <td colSpan={6} className="py-8 text-center text-sm text-muted">
                   Loading orders…
                 </td>
               </tr>
+            ) : orders.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="py-8 text-center text-sm text-muted">
+                  No orders yet. Schedule an appointment to create one.
+                </td>
+              </tr>
             ) : (
-              rows.map((o) => (
-                <tr key={o.id}>
-                  <td className="font-mono text-xs">{o.id}</td>
+              orders.map((order) => (
+                <tr key={order.id}>
+                  <td className="font-mono text-xs text-slate-600">{order.id}</td>
+                  <td className="font-medium text-slate-900">{order.patientName}</td>
+                  <td className="max-w-xs truncate text-sm">{order.testNames.join(', ')}</td>
+                  <td>{formatCurrency(order.totalAmount)}</td>
                   <td>
-                    <span className="font-medium text-slate-900">{o.patientName}</span>
-                    <span className="ml-1 text-xs text-muted">({o.patientId})</span>
+                    <StatusBadge label={order.status} variant={statusVariant(order.status)} />
                   </td>
-                  <td className="max-w-xs truncate">{o.testNames.join(', ')}</td>
-                  <td>{formatCurrency(o.totalAmount)}</td>
-                  <td>
-                    <StatusBadge label={o.status} variant={statusVariant(o.status)} />
-                  </td>
-                  <td>{formatDateTime(o.createdAt)}</td>
+                  <td className="text-sm text-muted">{formatDateTime(order.createdAt)}</td>
                 </tr>
               ))
             )}
@@ -73,19 +85,11 @@ function OrdersContent() {
 
 export default function OrdersPage() {
   return (
-    <div>
-      <PageHeader
-        title="Orders"
-        description="Test orders linked to patients through the lab workflow"
-        action={
-          <Link href="/appointments?schedule=1" className="lims-btn-primary">
-            Schedule Appointment
-          </Link>
-        }
-      />
-      <Suspense fallback={null}>
-        <OrdersContent />
-      </Suspense>
-    </div>
+  <div>
+    <PageHeader title="Orders" description="Lab test orders" />
+    <Suspense>
+      <OrdersContent />
+    </Suspense>
+  </div>
   );
 }

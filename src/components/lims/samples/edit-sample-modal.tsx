@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 import { ModalPortal } from '@/components/lims/modal-portal';
+import { getLimsData } from '@/lib/api/use-lims-data';
 import { getActiveSampleTypes } from '@/lib/data/sample-types-store';
-import { updateSample } from '@/lib/data/samples-store';
 import type { Sample, SampleStatus } from '@/lib/types/lims';
 
 const SAMPLE_STATUS_OPTIONS: SampleStatus[] = [
@@ -59,11 +59,12 @@ export function EditSampleModal({ sample, onClose, onSaved }: EditSampleModalPro
             </div>
             <form
               className="flex flex-col"
-              onSubmit={(e) => {
+              onSubmit={async (e) => {
                 e.preventDefault();
                 setError('');
                 try {
-                  const saved = updateSample(sample.id, {
+                  const api = await getLimsData();
+                  const saved = await api.samples.update(sample.id, {
                     sampleType,
                     status,
                     collectedAt: collectedAt || undefined,

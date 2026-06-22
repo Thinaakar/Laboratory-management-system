@@ -14,6 +14,7 @@ import type {
   InventoryItem,
   LabOrder,
   LabTest,
+  LimsUser,
   MarketingLead,
   Patient,
   Sample,
@@ -22,8 +23,8 @@ import type {
   TestDepartment,
   TestResult,
 } from '@/lib/types/lims';
-import { getAnalyticsSnapshot, type AnalyticsPeriod } from '@/lib/data/analytics';
-import { buildPatientReports } from '@/lib/data/reports';
+import { buildAnalyticsSnapshot, type AnalyticsPeriod } from '@/lib/data/analytics';
+import { buildPatientReportsFromData } from '@/lib/data/reports';
 
 function db(): Firestore {
   return getAdminFirestore();
@@ -245,19 +246,30 @@ export async function getAnalyticsFromDb(period: AnalyticsPeriod = 'overall') {
       listTests(),
     ]);
 
-  // Temporarily inject into analytics by using snapshot with live data
-  // Analytics module reads from store getters — we replicate via a server adapter
-  void patients;
-  void samples;
-  void orders;
-  void invoices;
-  void results;
-  void appointments;
-  void users;
-  void inventory;
-  void tests;
-
-  return getAnalyticsSnapshot(period);
+  return buildAnalyticsSnapshot(
+    {
+      patients,
+      samples,
+      orders,
+      invoices,
+      results,
+      appointments,
+      users: users.map(
+        (u): LimsUser => ({
+          id: u.id,
+          displayName: u.displayName,
+          email: u.email,
+          role: u.role as LimsUser['role'],
+          status: u.status,
+          branchId: u.branchId,
+          createdAt: u.createdAt,
+        }),
+      ),
+      inventory,
+      tests,
+    },
+    period,
+  );
 }
 
 export async function listReports() {
@@ -267,9 +279,6 @@ export async function listReports() {
     listPatients(),
     listSamples(),
   ]);
-  void results;
-  void orders;
-  void patients;
-  void samples;
-  return buildPatientReports();
+
+  return buildPatientReportsFromData({ results, orders, patients, samples });
 }

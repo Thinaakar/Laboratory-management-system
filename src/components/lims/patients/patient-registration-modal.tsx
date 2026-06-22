@@ -11,8 +11,8 @@ import {
   getNextPatientId,
   PATIENT_TYPE_OPTIONS,
 } from "@/lib/data/patients-store";
-import { getReferrals } from "@/lib/data/store";
 import { getLimsData } from "@/lib/api/use-lims-data";
+import type { DoctorReferral } from "@/lib/types/lims";
 
 interface PatientRegistrationModalProps {
   onClose: () => void;
@@ -26,7 +26,7 @@ export function PatientRegistrationModal({
   patient,
 }: PatientRegistrationModalProps) {
   const isEdit = Boolean(patient);
-  const referrals = getReferrals();
+  const [referrals, setReferrals] = useState<DoctorReferral[]>([]);
   const [patientId, setPatientId] = useState("");
   const [mounted, setMounted] = useState(false);
   const [firstName, setFirstName] = useState("");

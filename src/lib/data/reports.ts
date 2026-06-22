@@ -1,6 +1,5 @@
 import type { LabOrder, Patient, Sample, TestResult } from '@/lib/types/lims';
-import { getOrders, getResults, getSamples } from '@/lib/data/store';
-import { getPatients } from '@/lib/data/patients-store';
+import { getOrders, getPatients, getResults, getSamples } from '@/lib/data/store';
 import { formatDateTime } from '@/lib/utils';
 
 export interface PatientReport {
@@ -31,11 +30,16 @@ function latestTimestamp(results: TestResult[], field: 'approvedAt' | 'enteredAt
   return values[0];
 }
 
-export function buildPatientReports(): PatientReport[] {
-  const approved = getResults().filter((r) => r.approvalStatus === 'Approved');
-  const orders = getOrders();
-  const patients = getPatients();
-  const samples = getSamples();
+export interface ReportDataSource {
+  results: TestResult[];
+  orders: LabOrder[];
+  patients: Patient[];
+  samples: Sample[];
+}
+
+export function buildPatientReportsFromData(data: ReportDataSource): PatientReport[] {
+  const approved = data.results.filter((r) => r.approvalStatus === 'Approved');
+  const { orders, patients, samples } = data;
 
   const byOrder = new Map<string, TestResult[]>();
   for (const result of approved) {
@@ -63,12 +67,21 @@ export function buildPatientReports(): PatientReport[] {
         samples: reportSamples,
         results,
         testCount: results.length,
-        approvedBy: results.find((r) => r.approvedBy)?.approvedBy ?? 'Dr. Meera Iyer',
+        approvedBy: results.find((r) => r.approvedBy)?.approvedBy,
         approvedAt: latestTimestamp(results, 'approvedAt') ?? latestTimestamp(results, 'enteredAt'),
         referringDoctor: order?.referringDoctor,
       };
     })
     .sort((a, b) => (b.approvedAt ?? '').localeCompare(a.approvedAt ?? ''));
+}
+
+export function buildPatientReports(): PatientReport[] {
+  return buildPatientReportsFromData({
+    results: getResults(),
+    orders: getOrders(),
+    patients: getPatients(),
+    samples: getSamples(),
+  });
 }
 
 export function reportDetailCsvRows(report: PatientReport) {

@@ -4,9 +4,8 @@ import { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 import { ModalPortal } from '@/components/lims/modal-portal';
 import { getLimsData } from '@/lib/api/use-lims-data';
-import { getActiveSampleTypes } from '@/lib/data/sample-types-store';
-
-import type { LabOrder, Sample } from '@/lib/types/lims';
+import { apiJson } from '@/lib/http/client';
+import type { LabOrder, Sample, SampleType } from '@/lib/types/lims';
 
 interface RegisterSampleModalProps {
   onClose: () => void;
@@ -21,7 +20,7 @@ function toDatetimeLocalValue(date: Date = new Date()): string {
 export function RegisterSampleModal({ onClose, onSaved }: RegisterSampleModalProps) {
   const [ready, setReady] = useState(false);
   const [orders, setOrders] = useState<LabOrder[]>([]);
-  const [sampleTypes, setSampleTypes] = useState<ReturnType<typeof getActiveSampleTypes>>([]);
+  const [sampleTypes, setSampleTypes] = useState<SampleType[]>([]);
   const [orderId, setOrderId] = useState('');
   const [sampleType, setSampleType] = useState('');
   const [collectedAt, setCollectedAt] = useState('');
@@ -31,11 +30,12 @@ export function RegisterSampleModal({ onClose, onSaved }: RegisterSampleModalPro
     let cancelled = false;
     (async () => {
       const api = await getLimsData();
-      const [list, barcode] = await Promise.all([
+      const [list, barcode, stRes] = await Promise.all([
         api.orders.list(),
         api.samples.nextBarcode(),
+        apiJson<{ data: SampleType[] }>('/api/sample-types'),
       ]);
-      const types = getActiveSampleTypes();
+      const types = stRes.data.filter((s) => s.isActive);
       if (cancelled) return;
       setOrders(list);
       setSampleTypes(types);

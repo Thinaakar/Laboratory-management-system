@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 import { ModalPortal } from '@/components/lims/modal-portal';
 import { getLimsData } from '@/lib/api/use-lims-data';
-import { getActiveSampleTypes } from '@/lib/data/sample-types-store';
-import type { Sample, SampleStatus } from '@/lib/types/lims';
+import { apiJson } from '@/lib/http/client';
+import type { Sample, SampleStatus, SampleType } from '@/lib/types/lims';
 
 const SAMPLE_STATUS_OPTIONS: SampleStatus[] = [
   'Registered',
@@ -31,7 +31,7 @@ function toDatetimeLocalValue(iso?: string): string {
 }
 
 export function EditSampleModal({ sample, onClose, onSaved }: EditSampleModalProps) {
-  const sampleTypes = getActiveSampleTypes();
+  const [sampleTypes, setSampleTypes] = useState<SampleType[]>([]);
   const [sampleType, setSampleType] = useState(sample.sampleType);
   const [status, setStatus] = useState<SampleStatus>(sample.status);
   const [collectedAt, setCollectedAt] = useState(toDatetimeLocalValue(sample.collectedAt));
@@ -42,6 +42,12 @@ export function EditSampleModal({ sample, onClose, onSaved }: EditSampleModalPro
     setStatus(sample.status);
     setCollectedAt(toDatetimeLocalValue(sample.collectedAt));
   }, [sample]);
+
+  useEffect(() => {
+    apiJson<{ data: SampleType[] }>('/api/sample-types')
+      .then((res) => setSampleTypes(res.data.filter((s) => s.isActive)))
+      .catch(() => setSampleTypes([]));
+  }, []);
 
   return (
     <ModalPortal>

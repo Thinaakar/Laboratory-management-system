@@ -12,6 +12,7 @@
     "test:qa": "npm run type-check && npm run test:e2e",
     "clear-transactional": "node scripts/clear-transactional-data.mjs",
     "reset-admin": "node scripts/reset-admin-user.mjs",
+    "reseed-all": "node scripts/reseed-all-data.mjs",
     "seed-roles": "node scripts/seed-roles.mjs",
     "seed-login-bg": "node scripts/seed-login-background.mjs"
   },

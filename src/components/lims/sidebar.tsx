@@ -166,7 +166,7 @@ export function LimsSidebar() {
             href="/dashboard"
             className="relative z-0 inline-flex min-w-0 flex-1 overflow-hidden"
           >
-            <LabCoreLogo size="md" priority />
+            <LabCoreLogo size="md" variant="light" />
           </Link>
         )}
         <button

@@ -27,8 +27,8 @@ export const metadata: Metadata = {
     'Production-grade LIMS for diagnostic centers, pathology labs, and health checkup facilities. Workflow-driven, audit-ready, SaaS-ready.',
   openGraph: {
     type: 'website',
-    siteName: 'Xangam LIMS',
-    title: 'Xangam LIMS',
+    siteName: 'LabCore LIMS',
+    title: 'LabCore LIMS',
     description: 'Enterprise laboratory information management system',
   },
   icons: {
